@@ -178,63 +178,64 @@ async function run() {
       }
     });
 
-    // ---------- 2️⃣ Approve Submission ----------
+    // Approve Submission
     app.put("/submissions/approve/:id", async (req, res) => {
-      try {
-        const submissionId = req.params.id;
+      const { id } = req.params;
 
-        // Find submission
+      try {
+        // 1. Find the submission
         const submission = await submissionsCollection.findOne({
-          _id: new ObjectId(submissionId),
+          _id: new ObjectId(id),
         });
         if (!submission)
           return res.status(404).send({ message: "Submission not found" });
 
-        // Update submission status to approved
+        // 2. Update worker coins
+        const coinsToAdd = submission.payable_amount * 20; // business logic
+        await usersCollection.updateOne(
+          { email: submission.worker_email },
+          { $inc: { coins: coinsToAdd } }
+        );
+
+        // 3. Update submission status to approved
         await submissionsCollection.updateOne(
-          { _id: new ObjectId(submissionId) },
+          { _id: new ObjectId(id) },
           { $set: { status: "approved" } }
         );
 
-        // Increase worker coin
-        await usersCollection.updateOne(
-          { email: submission.worker_email },
-          { $inc: { coin: submission.payable_amount } }
-        );
-
-        res.send({ message: "Submission approved and worker coin updated" });
+        res.send({ message: "Submission approved and worker coins updated" });
       } catch (error) {
         console.error(error);
         res.status(500).send({ message: "Failed to approve submission" });
       }
     });
 
-    // ---------- 3️⃣ Reject Submission ----------
+    // Reject Submission
     app.put("/submissions/reject/:id", async (req, res) => {
-      try {
-        const submissionId = req.params.id;
+      const { id } = req.params;
 
-        // Find submission
+      try {
+        // 1. Find the submission
         const submission = await submissionsCollection.findOne({
-          _id: new ObjectId(submissionId),
+          _id: new ObjectId(id),
         });
         if (!submission)
           return res.status(404).send({ message: "Submission not found" });
 
-        // Update submission status to rejected
+        // 2. Update submission status to rejected
         await submissionsCollection.updateOne(
-          { _id: new ObjectId(submissionId) },
+          { _id: new ObjectId(id) },
           { $set: { status: "rejected" } }
         );
 
-        // Increase required_workers by 1 in task
+        // 3. Increase required_workers for the task
         await tasksCollection.updateOne(
           { _id: new ObjectId(submission.task_id) },
           { $inc: { required_workers: 1 } }
         );
 
         res.send({
-          message: "Submission rejected and required_workers updated",
+          message: "Submission rejected and required_workers increased",
         });
       } catch (error) {
         console.error(error);

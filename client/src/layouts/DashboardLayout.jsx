@@ -256,21 +256,6 @@ const DashboardLayout = () => {
           </li>
           <li>
             <NavLink
-              to="/dashboard/task-details"
-              className={({ isActive }) =>
-                `flex items-center gap-2 ${
-                  isActive
-                    ? "bg-brand text-white rounded-md px-2 py-1"
-                    : "text-gray-700"
-                }`
-              }
-            >
-              <HiDocumentText className="w-5 h-5" />
-              Task Details
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
               to="/dashboard/withdraw"
               className={({ isActive }) =>
                 `flex items-center gap-2 ${

@@ -1,13 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useAuth from "../../../hooks/useAuth";
-import { Link } from "react-router";
 
 export default function MySubmission() {
   const axiosSecure = useAxiosSecure();
   const { user } = useAuth();
 
-  // Fetch submissions
   const { data: submissions = [], isLoading } = useQuery({
     queryKey: ["mySubmissions"],
     queryFn: async () => {
@@ -36,7 +34,57 @@ export default function MySubmission() {
         My Submissions
       </h1>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      {/* ---------- ✅ Large Device Table ---------- */}
+      <div className="hidden md:block overflow-x-auto rounded-lg shadow">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-gray-100 text-left text-gray-700">
+              <th className="py-3 px-4">Task Title</th>
+              <th className="py-3 px-4">Amount</th>
+              <th className="py-3 px-4">Status</th>
+              <th className="py-3 px-4">Date</th>
+              <th className="py-3 px-4">Submission Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            {submissions.map((sub) => (
+              <tr
+                key={sub._id}
+                className="border-b hover:bg-gray-50 transition"
+              >
+                <td className="py-3 px-4 font-medium text-gray-800">
+                  {sub.task_title}
+                </td>
+                <td className="py-3 px-4 text-gray-700">
+                  ${sub.payable_amount}
+                </td>
+                <td className="py-3 px-4">
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      sub.status === "pending"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : sub.status === "approved"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {sub.status.toUpperCase()}
+                  </span>
+                </td>
+                <td className="py-3 px-4 text-gray-700">
+                  {new Date(sub.current_date).toLocaleDateString()}
+                </td>
+                <td className="py-3 px-4 text-gray-600 text-sm">
+                  {sub.submission_details}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ---------- ✅ Small Device Cards ---------- */}
+      <div className="grid gap-6 md:hidden">
         {submissions.map((sub) => (
           <div
             key={sub._id}
