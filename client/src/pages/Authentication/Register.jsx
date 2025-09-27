@@ -39,6 +39,7 @@ function Register() {
 
       // update userInfo in the database
       const userInfo = {
+        name,
         email,
         role,
         coins,

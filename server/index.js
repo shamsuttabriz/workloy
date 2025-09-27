@@ -35,6 +35,7 @@ const tasksCollection = db.collection("tasks");
 const usersCollection = db.collection("users");
 const paymentsCollection = db.collection("payments");
 const submissionsCollection = db.collection("submissions");
+const withdrawalsCollection = db.collection("withdrawals")
 
 async function run() {
   try {
@@ -113,6 +114,90 @@ async function run() {
         console.error(error);
         res.status(500).send({ message: "Server error" });
       }
+    });
+
+    // ✅ 1) Get user coins
+    app.get("/user/coins", verifyFBToken, async (req, res) => {
+      try {
+        const email = req.decoded.email;
+
+        const user = await usersCollection.findOne({ email });
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        res.json({
+          worker_email: email,
+          worker_name: user.name,
+          totalCoins: user.coins,
+        });
+      } catch (error) {
+        res.status(500).json({ message: error.message });
+      }
+    });
+
+    // ✅ 2) Post withdrawal request
+    app.post("/withdrawals", verifyFBToken, async (req, res) => {
+      try {
+        const {
+          withdrawal_coin,
+          withdrawal_amount,
+          payment_system,
+          account_number,
+        } = req.body;
+
+        if (!withdrawal_coin || withdrawal_coin < 200) {
+          return res
+            .status(400)
+            .json({ message: "Minimum 200 coins required" });
+        }
+
+        // Check user coins
+        // const email = req.user.email;
+        const email = req.decoded.email;
+        
+        const user = await usersCollection.findOne({ email });
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        if (withdrawal_coin > user.coins) {
+          return res.status(400).json({ message: "Not enough coins" });
+        }
+
+        const withdrawDoc = {
+          worker_email: email,
+          worker_name: user.name,
+          withdrawal_coin,
+          withdrawal_amount,
+          payment_system,
+          account_number,
+          withdraw_date: new Date(),
+          status: "pending",
+        };
+
+        await withdrawalsCollection.insertOne(withdrawDoc);
+
+        // Update user coins
+        await usersCollection.updateOne(
+          { email },
+          { $inc: { coins: -withdrawal_coin } }
+        );
+
+        res.json({ success: true, message: "Withdrawal request submitted" });
+      } catch (error) {
+        res.status(500).json({ message: error.message });
+      }
+    });
+
+    // ✅ 3) Admin approve/reject (example)
+    app.patch("/withdrawals/:id", async (req, res) => {
+      const { id } = req.params;
+      const { status } = req.body; // "approved" or "rejected"
+      if (!["approved", "rejected"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+      await withdrawalsCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { status } }
+      );
+      res.json({ success: true, message: `Withdrawal ${status}` });
     });
 
     // ---------- CREATE SUBMISSION ----------
