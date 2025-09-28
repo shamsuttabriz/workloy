@@ -269,6 +269,21 @@ const DashboardLayout = () => {
               Withdraw
             </NavLink>
           </li>
+          <li>
+            <NavLink
+              to="/dashboard/withdraw-requests"
+              className={({ isActive }) =>
+                `flex items-center gap-2 ${
+                  isActive
+                    ? "bg-brand text-white rounded-md px-2 py-1"
+                    : "text-gray-700"
+                }`
+              }
+            >
+              <HiArrowCircleUp className="w-5 h-5" />
+              Withdraw Requests
+            </NavLink>
+          </li>
         </ul>
       </div>
     </div>

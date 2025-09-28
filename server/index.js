@@ -35,7 +35,7 @@ const tasksCollection = db.collection("tasks");
 const usersCollection = db.collection("users");
 const paymentsCollection = db.collection("payments");
 const submissionsCollection = db.collection("submissions");
-const withdrawalsCollection = db.collection("withdrawals")
+const withdrawalsCollection = db.collection("withdrawals");
 
 async function run() {
   try {
@@ -61,6 +61,16 @@ async function run() {
       } catch (error) {
         return res.status(403).send({ message: "Forbidden Access" });
       }
+    };
+
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded.email;
+      const user = await usersCollection.findOne({ email });
+      if (!user || user.role !== "admin") {
+        return res.status(403).send({ message: "Forbidden Access" });
+      }
+
+      next();
     };
 
     // ================== USER COLLECTION ==================
@@ -153,7 +163,7 @@ async function run() {
         // Check user coins
         // const email = req.user.email;
         const email = req.decoded.email;
-        
+
         const user = await usersCollection.findOne({ email });
         if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -198,6 +208,51 @@ async function run() {
         { $set: { status } }
       );
       res.json({ success: true, message: `Withdrawal ${status}` });
+    });
+
+    // ✅ Get all pending withdrawals
+    app.get("/withdrawals/pending", async (req, res) => {
+      try {
+        const pending = await withdrawalsCollection
+          .find({ status: "pending" })
+          .toArray();
+        res.json(pending);
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+      }
+    });
+
+    // ✅ Approve a withdrawal request
+    app.patch("/withdrawals/approve/:id", async (req, res) => {
+      const id = req.params.id;
+
+      try {
+        const withdraw = await withdrawalsCollection.findOne({
+          _id: new ObjectId(id),
+        });
+        if (!withdraw)
+          return res.status(404).json({ message: "Request not found" });
+        if (withdraw.status === "approved")
+          return res.status(400).json({ message: "Already approved" });
+
+        // Update withdraw status
+        await withdrawalsCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: { status: "approved" } }
+        );
+
+        // Decrease user coin
+        await usersCollection.updateOne(
+          { email: withdraw.userEmail },
+          { $inc: { coins: -withdraw.amount } }
+        );
+
+        res.json({ message: "Withdrawal approved and user coin decreased" });
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+      }
     });
 
     // ---------- CREATE SUBMISSION ----------
