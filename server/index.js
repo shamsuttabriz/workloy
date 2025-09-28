@@ -231,6 +231,7 @@ async function run() {
         const withdraw = await withdrawalsCollection.findOne({
           _id: new ObjectId(id),
         });
+        console.log("Withdraw amount: ", withdraw);
         if (!withdraw)
           return res.status(404).json({ message: "Request not found" });
         if (withdraw.status === "approved")
@@ -243,16 +244,37 @@ async function run() {
         );
 
         // Decrease user coin
-        await usersCollection.updateOne(
-          { email: withdraw.userEmail },
-          { $inc: { coins: -withdraw.amount } }
-        );
+        // await usersCollection.updateOne(
+        //   { email: withdraw.worker_email },
+        //   { $inc: { coins: -withdraw.amount } }
+        // );
 
         res.json({ message: "Withdrawal approved and user coin decreased" });
       } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server error" });
       }
+    });
+
+    // GET /withdrawals/total/:email
+    app.get("/withdrawals/total/:email", verifyFBToken, async (req, res) => {
+      const email = req.params.email;
+
+      const total = await withdrawalsCollection
+        .aggregate([
+          { $match: { worker_email: email, status: "approved" } },
+          {
+            $group: {
+              _id: null,
+              totalAmount: { $sum: "$withdrawal_amount" }, // এখানে dollar sum হচ্ছে
+            },
+          },
+        ])
+        .toArray();
+
+      res.json({
+        totalWithdrawAmount: total[0]?.totalAmount || 0,
+      });
     });
 
     // ---------- CREATE SUBMISSION ----------

@@ -12,7 +12,7 @@ const WithDraw = () => {
   const [paymentSystem, setPaymentSystem] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
 
-  // ✅ User coin info load
+  // ✅ User coin info
   const {
     data: userData,
     isLoading,
@@ -30,6 +30,18 @@ const WithDraw = () => {
     ? (Number(coinToWithdraw) / 20).toFixed(2)
     : "0";
 
+  // ✅ Total approved withdraw amount
+  const { data: totalWithdrawData, isLoading: totalLoading } = useQuery({
+    queryKey: ["totalWithdrawAmount", userData?.worker_email],
+    enabled: !!userData?.worker_email,
+    queryFn: async () => {
+      const res = await axiosSecure.get(
+        `/withdrawals/total/${userData.worker_email}`
+      );
+      return res.data; // { totalWithdrawAmount: number }
+    },
+  });
+
   // ✅ Mutation for withdrawal
   const mutation = useMutation({
     mutationFn: async (withdrawData) => {
@@ -37,6 +49,7 @@ const WithDraw = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["userCoin"] });
+      queryClient.invalidateQueries({ queryKey: ["totalWithdrawAmount"] });
 
       Swal.fire({
         icon: "success",
@@ -60,7 +73,7 @@ const WithDraw = () => {
     },
   });
 
-  if (isLoading) return <p className="text-center mt-10">Loading...</p>;
+  if (isLoading) return <p className="text-center mt-10 text-lg">Loading...</p>;
   if (isError)
     return (
       <p className="text-center mt-10 text-red-600">Failed to load data</p>
@@ -94,90 +107,115 @@ const WithDraw = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 mx-4">
-      <div className="max-w-md w-full bg-white shadow-lg p-6 rounded-lg">
-        <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-          <FaCoins className="text-yellow-500" /> Withdraw Coins
-        </h2>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-10 px-4 flex justify-center">
+      <div className="max-w-2xl w-full space-y-8">
+        {/* ---- Stats Section ---- */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="bg-white shadow rounded-xl p-6 flex flex-col items-center">
+            <FaCoins className="text-yellow-500 text-3xl mb-2" />
+            <h3 className="text-gray-700 font-medium">Current Coins</h3>
+            <p className="text-2xl font-bold text-gray-800">{totalCoins}</p>
+          </div>
 
-        <p className="mb-2 flex items-center gap-2 text-gray-700">
-          <FaCoins className="text-yellow-500" />
-          Current Coins: <span className="font-bold">{totalCoins}</span>
-        </p>
+          <div className="bg-white shadow rounded-xl p-6 flex flex-col items-center">
+            <FaDollarSign className="text-green-600 text-3xl mb-2" />
+            <h3 className="text-gray-700 font-medium">Total Dollar</h3>
+            <p className="text-2xl font-bold text-gray-800">
+              ${(totalCoins / 20).toFixed(2)}
+            </p>
+          </div>
 
-        <p className="mb-4 flex items-center gap-2 text-gray-700">
-          <FaDollarSign className="text-green-600" />
-          Total Dollar:{" "}
-          <span className="font-bold">${(totalCoins / 20).toFixed(2)}</span>
-        </p>
+          <div className="bg-white shadow rounded-xl p-6 flex flex-col items-center">
+            <FaDollarSign className="text-blue-600 text-3xl mb-2" />
+            <h3 className="text-gray-700 font-medium">Total Withdrawn</h3>
+            {totalLoading ? (
+              <p className="text-gray-500">Loading...</p>
+            ) : (
+              <p className="text-2xl font-bold text-gray-800">
+                ${totalWithdrawData?.totalWithdrawAmount.toFixed(2)}
+              </p>
+            )}
+          </div>
+        </div>
 
-        {canWithdraw ? (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block font-medium mb-1">
-                Coins to Withdraw
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={coinToWithdraw}
-                onChange={(e) => setCoinToWithdraw(e.target.value)}
-                className="w-full border rounded p-2"
-              />
-            </div>
+        {/* ---- Withdraw Form ---- */}
+        <div className="bg-white shadow-lg rounded-xl p-8">
+          <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2">
+            <FaCoins className="text-yellow-500" /> Request a Withdrawal
+          </h2>
 
-            <div>
-              <label className="block font-medium mb-1">
-                Withdrawal Amount ($)
-              </label>
-              <input
-                type="text"
-                value={withdrawDollar}
-                readOnly
-                className="w-full border rounded p-2 bg-gray-100"
-              />
-            </div>
+          {canWithdraw ? (
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="block font-medium text-gray-700 mb-1">
+                  Coins to Withdraw
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={coinToWithdraw}
+                  onChange={(e) => setCoinToWithdraw(e.target.value)}
+                  className="w-full border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                  placeholder="e.g. 200"
+                />
+              </div>
 
-            <div>
-              <label className="block font-medium mb-1">
-                Select Payment System
-              </label>
-              <select
-                value={paymentSystem}
-                onChange={(e) => setPaymentSystem(e.target.value)}
-                className="w-full border rounded p-2"
+              <div>
+                <label className="block font-medium text-gray-700 mb-1">
+                  Withdrawal Amount ($)
+                </label>
+                <input
+                  type="text"
+                  value={withdrawDollar}
+                  readOnly
+                  className="w-full border-gray-300 rounded-lg p-3 bg-gray-100"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium text-gray-700 mb-1">
+                  Select Payment System
+                </label>
+                <select
+                  value={paymentSystem}
+                  onChange={(e) => setPaymentSystem(e.target.value)}
+                  className="w-full border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                >
+                  <option value="">-- Select --</option>
+                  <option value="Bkash">Bkash</option>
+                  <option value="Rocket">Rocket</option>
+                  <option value="Nagad">Nagad</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-medium text-gray-700 mb-1">
+                  Account Number
+                </label>
+                <input
+                  type="text"
+                  value={accountNumber}
+                  onChange={(e) => setAccountNumber(e.target.value)}
+                  className="w-full border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                  placeholder="Enter your account number"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={mutation.isLoading}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg text-lg font-medium hover:bg-blue-700 transition"
               >
-                <option value="">-- Select --</option>
-                <option value="Bkash">Bkash</option>
-                <option value="Rocket">Rocket</option>
-                <option value="Nagad">Nagad</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block font-medium mb-1">Account Number</label>
-              <input
-                type="text"
-                value={accountNumber}
-                onChange={(e) => setAccountNumber(e.target.value)}
-                className="w-full border rounded p-2"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={mutation.isLoading}
-              className="bg-blue-600 text-white w-full py-2 rounded hover:bg-blue-700 transition"
-            >
-              {mutation.isLoading ? "Submitting..." : "Withdraw"}
-            </button>
-          </form>
-        ) : (
-          <p className="text-red-600 font-medium text-center mt-4">
-            Insufficient coin (Minimum 200 required to withdraw)
-          </p>
-        )}
+                {mutation.isLoading ? "Submitting..." : "Submit Request"}
+              </button>
+            </form>
+          ) : (
+            <p className="text-red-600 font-medium text-center mt-4">
+              Minimum 200 coins required to withdraw
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

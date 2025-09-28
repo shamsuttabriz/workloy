@@ -21,6 +21,8 @@ export default function TaskDetail() {
     },
   });
 
+  console.log(task)
+
   const onSubmit = async (data) => {
     try {
       await axiosSecure.post("/submissions", {
@@ -61,7 +63,7 @@ export default function TaskDetail() {
         <h1 className="text-3xl font-extrabold text-center text-[var(--color-brand-dark)]">{task.task_title}</h1>
 
         <div className="bg-white p-4 rounded-lg space-y-2">
-          <p className="text-[var(--color-natural-dark)]"><strong>Buyer:</strong> {user.displayName} ({task.created_by})</p>
+          <p className="text-[var(--color-natural-dark)]"><strong>Buyer:</strong> {task.buyer_name} ({task.created_by})</p>
           <p className="text-[var(--color-natural-light)]"><strong>Completion Date:</strong> {new Date(task.completion_date).toLocaleDateString()}</p>
           <p className="text-[var(--color-natural-dark)]"><strong>Payable Amount:</strong> ${task.payable_amount}</p>
           <p className="text-[var(--color-natural-dark)]"><strong>Required Workers:</strong> {task.required_workers}</p>
