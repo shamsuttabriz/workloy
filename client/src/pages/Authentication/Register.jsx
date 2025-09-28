@@ -43,6 +43,7 @@ function Register() {
         email,
         role,
         coins,
+        image: user.photoURL,
         created_at: new Date().toISOString(),
         last_log_in: new Date().toISOString(),
       };

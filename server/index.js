@@ -646,6 +646,50 @@ async function run() {
       }
     });
 
+    // ✅ Delete a user by id
+    app.delete("/users/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const result = await usersCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+
+        if (result.deletedCount === 0) {
+          return res.status(404).send({ message: "User not found" });
+        }
+        res.status(200).send({ message: "User deleted successfully" });
+      } catch (error) {
+        console.error("Delete User Error:", error);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+
+    // ✅ Update user role by id
+    app.patch("/users/role/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const { role } = req.body; // body থেকে role আসবে: "Admin" | "Buyer" | "Worker"
+
+        if (!role) {
+          return res.status(400).send({ message: "Role is required" });
+        }
+
+        const result = await usersCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: { role } }
+        );
+
+        if (result.matchedCount === 0) {
+          return res.status(404).send({ message: "User not found" });
+        }
+
+        res.status(200).send({ message: "Role updated successfully" });
+      } catch (error) {
+        console.error("Update Role Error:", error);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+
     // ==================== PING ====================
     await client.db("admin").command({ ping: 1 });
     console.log(

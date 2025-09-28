@@ -19,6 +19,7 @@ import ApprovedSubmission from "../Dashboard/Worker/ApprovedSubmission";
 import TaskDetail from "../Dashboard/Worker/TaskDetail";
 import TaskReview from "../Dashboard/Buyer/TaskReview";
 import WithdrawRequests from "../Dashboard/Admin/WithdrawRequests";
+import ManageUsers from "../Dashboard/Admin/ManageUsers";
 
 export const router = createBrowserRouter([
   {
@@ -108,6 +109,10 @@ export const router = createBrowserRouter([
       {
         path: "withdraw-requests",
         Component: WithdrawRequests,
+      },
+      {
+        path: "manage-users",
+        Component: ManageUsers,
       },
     ],
   },
