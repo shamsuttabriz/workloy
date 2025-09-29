@@ -57,6 +57,8 @@ async function run() {
       try {
         const decoded = await admin.auth().verifyIdToken(token);
         req.decoded = decoded;
+
+        console.log("Decoded token: ", req.decoded);
         next();
       } catch (error) {
         return res.status(403).send({ message: "Forbidden Access" });
@@ -444,7 +446,7 @@ async function run() {
     });
 
     // ==================== GET TASKS WHERE required_workers > 0 ====================
-    app.get("/tasks/available", async (req, res) => {
+    app.get("/tasks/available", verifyFBToken, async (req, res) => {
       try {
         // MongoDB query: required_workers greater than 0
         const query = { required_workers: { $gt: 0 } };
@@ -460,6 +462,43 @@ async function run() {
         res.status(500).send({ message: "Failed to get available tasks" });
       }
     });
+
+    app.get("/users/:email/role", async (req, res) => {
+      try {
+        const email = req.params.email;
+
+        if (!email) {
+          return res.status(400).send({ message: "Email is not required" });
+        }
+
+        const user = await usersCollection.findOne({ email });
+
+        if (!user) {
+          return res.status(404).send({ messag: "User not found" });
+        }
+
+        res.send({ role: user.role || "worker"});
+      } catch (error) {
+        console.log("Error getting user role: ", error);
+        res.status(500).send({ message: "Failed to get role" });
+      }
+    });
+
+    // Admin all Tasks
+    // app.get("/tasks/all", verifyFBToken, async (req, res) => {
+    //   try {
+    //     if (req.decoded.role !== "admin") {
+    //       return res.status(403).send({ message: "Forbidden Access" });
+    //     }
+    //     const tasks = await tasksCollection
+    //       .find({})
+    //       .sort({ completion_date: -1 })
+    //       .toArray();
+    //     res.send(tasks);
+    //   } catch (error) {
+    //     res.status(500).send({ message: "Failed to get all tasks" });
+    //   }
+    // });
 
     // ================ GET SINGLE TASKS ==================
     app.get("/tasks/:id", async (req, res) => {

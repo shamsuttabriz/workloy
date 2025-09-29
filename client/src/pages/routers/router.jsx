@@ -20,6 +20,7 @@ import TaskDetail from "../Dashboard/Worker/TaskDetail";
 import TaskReview from "../Dashboard/Buyer/TaskReview";
 import WithdrawRequests from "../Dashboard/Admin/WithdrawRequests";
 import ManageUsers from "../Dashboard/Admin/ManageUsers";
+import ManageTasks from "../Dashboard/Admin/ManageTasks";
 
 export const router = createBrowserRouter([
   {
@@ -113,6 +114,10 @@ export const router = createBrowserRouter([
       {
         path: "manage-users",
         Component: ManageUsers,
+      },
+      {
+        path: "manage-tasks",
+        Component: ManageTasks,
       },
     ],
   },

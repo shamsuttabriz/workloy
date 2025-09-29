@@ -9,6 +9,7 @@ import {
   HiDocumentText,
   HiArrowCircleUp,
   HiOutlineClipboardCheck,
+  HiUserGroup,
 } from "react-icons/hi";
 import { Link, NavLink, Outlet } from "react-router";
 import { Bell } from "lucide-react";
@@ -17,10 +18,14 @@ import useAxiosSecure from "../hooks/useAxiosSecure";
 import LoadingPage from "../pages/shared/LoadingPage";
 import { useQuery } from "@tanstack/react-query";
 import useAuth from "../hooks/useAuth";
+import useUserRole from "../hooks/useUserRole";
 
 const DashboardLayout = () => {
   const axiosSecure = useAxiosSecure();
   const { user: hello } = useAuth();
+  const { role, roleLoading } = useUserRole();
+
+  console.log(role, roleLoading);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["user", hello?.email],
@@ -269,36 +274,59 @@ const DashboardLayout = () => {
               Withdraw
             </NavLink>
           </li>
-          <li>
-            <NavLink
-              to="/dashboard/withdraw-requests"
-              className={({ isActive }) =>
-                `flex items-center gap-2 ${
-                  isActive
-                    ? "bg-brand text-white rounded-md px-2 py-1"
-                    : "text-gray-700"
-                }`
-              }
-            >
-              <HiArrowCircleUp className="w-5 h-5" />
-              Withdraw Requests
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/dashboard/manage-users"
-              className={({ isActive }) =>
-                `flex items-center gap-2 ${
-                  isActive
-                    ? "bg-brand text-white rounded-md px-2 py-1"
-                    : "text-gray-700"
-                }`
-              }
-            >
-              <HiArrowCircleUp className="w-5 h-5" />
-              Manage Users
-            </NavLink>
-          </li>
+
+          {/* Admin Links */}
+          {!roleLoading && role === "Admin" && (
+            <>
+              <li>
+                <NavLink
+                  to="/dashboard/withdraw-requests"
+                  className={({ isActive }) =>
+                    `flex items-center gap-2 ${
+                      isActive
+                        ? "bg-brand text-white rounded-md px-2 py-1"
+                        : "text-gray-700"
+                    }`
+                  }
+                >
+                  <HiCurrencyDollar className="w-5 h-5" />
+                  Withdraw Requests
+                </NavLink>
+              </li>
+
+              <li>
+                <NavLink
+                  to="/dashboard/manage-users"
+                  className={({ isActive }) =>
+                    `flex items-center gap-2 ${
+                      isActive
+                        ? "bg-brand text-white rounded-md px-2 py-1"
+                        : "text-gray-700"
+                    }`
+                  }
+                >
+                  <HiUserGroup className="w-5 h-5" />
+                  Manage Users
+                </NavLink>
+              </li>
+
+              <li>
+                <NavLink
+                  to="/dashboard/manage-tasks"
+                  className={({ isActive }) =>
+                    `flex items-center gap-2 ${
+                      isActive
+                        ? "bg-brand text-white rounded-md px-2 py-1"
+                        : "text-gray-700"
+                    }`
+                  }
+                >
+                  <HiClipboardList className="w-5 h-5" />
+                  Manage Tasks
+                </NavLink>
+              </li>
+            </>
+          )}
         </ul>
       </div>
     </div>

@@ -45,6 +45,10 @@ export default function ManageUsers() {
   if (isLoading) return <p>Loading users...</p>;
   if (isError) return <p>Failed to load users</p>;
 
+  if (users.length === 0 ) {
+    return <p className="font-semibold text-2xl text-center my-5">User not found</p>;
+  }
+
   const handleRoleChange = (id, newRole) => {
     roleMutation.mutate({ id, role: newRole });
   };
