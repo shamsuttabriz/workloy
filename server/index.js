@@ -68,7 +68,7 @@ async function run() {
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email;
       const user = await usersCollection.findOne({ email });
-      if (!user || user.role !== "admin") {
+      if (!user || user.role !== "Admin") {
         return res.status(403).send({ message: "Forbidden Access" });
       }
 
@@ -213,7 +213,7 @@ async function run() {
     });
 
     // ✅ Get all pending withdrawals
-    app.get("/withdrawals/pending", async (req, res) => {
+    app.get("/withdrawals/pending", verifyFBToken, verifyAdmin, async (req, res) => {
       try {
         const pending = await withdrawalsCollection
           .find({ status: "pending" })
@@ -704,7 +704,7 @@ async function run() {
     });
 
     // ✅ Update user role by id
-    app.patch("/users/role/:id", async (req, res) => {
+    app.patch("/users/role/:id", verifyFBToken, verifyAdmin, async (req, res) => {
       try {
         const id = req.params.id;
         const { role } = req.body; // body থেকে role আসবে: "Admin" | "Buyer" | "Worker"

@@ -21,6 +21,8 @@ import TaskReview from "../Dashboard/Buyer/TaskReview";
 import WithdrawRequests from "../Dashboard/Admin/WithdrawRequests";
 import ManageUsers from "../Dashboard/Admin/ManageUsers";
 import ManageTasks from "../Dashboard/Admin/ManageTasks";
+import Forbidden from "../Forbidden";
+import AdminRoutes from "./AdminRoutes";
 
 export const router = createBrowserRouter([
   {
@@ -38,6 +40,10 @@ export const router = createBrowserRouter([
             <Profile />
           </PrivateRoute>
         ),
+      },
+      {
+        path: "/forbidden",
+        Component: Forbidden,
       },
     ],
   },
@@ -109,15 +115,27 @@ export const router = createBrowserRouter([
       },
       {
         path: "withdraw-requests",
-        Component: WithdrawRequests,
+        element: (
+          <AdminRoutes>
+            <WithdrawRequests />
+          </AdminRoutes>
+        ),
       },
       {
         path: "manage-users",
-        Component: ManageUsers,
+        element: (
+          <AdminRoutes>
+            <ManageUsers />
+          </AdminRoutes>
+        ),
       },
       {
         path: "manage-tasks",
-        Component: ManageTasks,
+        element: (
+          <AdminRoutes>
+            <ManageTasks />
+          </AdminRoutes>
+        ),
       },
     ],
   },
