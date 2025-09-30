@@ -14,7 +14,8 @@ const port = process.env.PORT || 5001;
 app.use(cors());
 app.use(express.json());
 
-var serviceAccount = require("./firebase-admin-key.json");
+const decodedkey = Buffer.from(process.env.FB_SERVICE_KEY, 'base64').toString('utf8');
+var serviceAccount = JSON.parse(decodedkey);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -118,8 +119,6 @@ async function run() {
           return res.status(404).send({ message: "User not found" });
         }
 
-        // password ফিল্ড বা sensitive কিছু থাকলে এখানে delete/omit করে পাঠানো ভালো
-        // delete user.password; // যদি password ফিল্ড থাকে
 
         res.status(200).send(user);
       } catch (error) {
@@ -145,28 +144,6 @@ async function run() {
         res.status(500).json({ message: error.message });
       }
     });
-
-    // app.get("/users/summary/total-count", async (req, res) => {
-    //   const pipeline = [
-    //     {
-    //       $group: {
-    //         _id: "$total_workers",
-    //         count: {
-    //           $sum: 1,
-    //         },
-    //       },
-    //     },
-    //     {
-    //       $project: {
-    //         buyer: "$_id",
-    //         count: 1,
-    //       }
-    //     }
-    //   ];
-
-    //   const result = await usersCollection.aggregate(pipeline).toArray();
-    //   res.send(result);
-    // });
 
     // ================== ADMIN DASHBOARD STATS ==================
     app.get(
@@ -394,12 +371,6 @@ async function run() {
           { _id: new ObjectId(id) },
           { $set: { status: "approved" } }
         );
-
-        // Decrease user coin
-        // await usersCollection.updateOne(
-        //   { email: withdraw.worker_email },
-        //   { $inc: { coins: -withdraw.amount } }
-        // );
 
         res.json({ message: "Withdrawal approved and user coin decreased" });
       } catch (err) {
@@ -876,7 +847,7 @@ async function run() {
       async (req, res) => {
         try {
           const id = req.params.id;
-          const { role } = req.body; // body থেকে role আসবে: "Admin" | "Buyer" | "Worker"
+          const { role } = req.body;
 
           if (!role) {
             return res.status(400).send({ message: "Role is required" });
