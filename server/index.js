@@ -146,6 +146,62 @@ async function run() {
       }
     });
 
+    // app.get("/users/summary/total-count", async (req, res) => {
+    //   const pipeline = [
+    //     {
+    //       $group: {
+    //         _id: "$total_workers",
+    //         count: {
+    //           $sum: 1,
+    //         },
+    //       },
+    //     },
+    //     {
+    //       $project: {
+    //         buyer: "$_id",
+    //         count: 1,
+    //       }
+    //     }
+    //   ];
+
+    //   const result = await usersCollection.aggregate(pipeline).toArray();
+    //   res.send(result);
+    // });
+
+    // ================== ADMIN DASHBOARD STATS ==================
+    app.get("/dashboard/admin-home/admin-stats", verifyFBToken, verifyAdmin, async (req, res) => {
+      try {
+
+        const totalWorkers = await usersCollection.countDocuments({
+          role: "Worker",
+        });
+        const totalBuyers = await usersCollection.countDocuments({
+          role: "Buyer",
+        });
+
+        const coinsAgg = await usersCollection
+          .aggregate([{ $group: { _id: null, totalCoins: { $sum: "$coin" } } }])
+          .toArray();
+        const totalAvailableCoins = coinsAgg[0]?.totalCoins || 0;
+
+        const paymentsAgg = await paymentsCollection
+          .aggregate([
+            { $group: { _id: null, totalPayments: { $sum: "$amount" } } },
+          ])
+          .toArray();
+        const totalPayments = paymentsAgg[0]?.totalPayments || 0;
+
+        res.send({
+          totalWorkers,
+          totalBuyers,
+          totalAvailableCoins,
+          totalPayments,
+        });
+      } catch (err) {
+        res.status(500).send({ message: err.message });
+      }
+    });
+
     // ✅ 2) Post withdrawal request
     app.post("/withdrawals", verifyFBToken, async (req, res) => {
       try {
@@ -213,17 +269,22 @@ async function run() {
     });
 
     // ✅ Get all pending withdrawals
-    app.get("/withdrawals/pending", verifyFBToken, verifyAdmin, async (req, res) => {
-      try {
-        const pending = await withdrawalsCollection
-          .find({ status: "pending" })
-          .toArray();
-        res.json(pending);
-      } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Server error" });
+    app.get(
+      "/withdrawals/pending",
+      verifyFBToken,
+      verifyAdmin,
+      async (req, res) => {
+        try {
+          const pending = await withdrawalsCollection
+            .find({ status: "pending" })
+            .toArray();
+          res.json(pending);
+        } catch (err) {
+          console.error(err);
+          res.status(500).json({ message: "Server error" });
+        }
       }
-    });
+    );
 
     // ✅ Approve a withdrawal request
     app.patch("/withdrawals/approve/:id", async (req, res) => {
@@ -477,7 +538,7 @@ async function run() {
           return res.status(404).send({ messag: "User not found" });
         }
 
-        res.send({ role: user.role || "worker"});
+        res.send({ role: user.role || "worker" });
       } catch (error) {
         console.log("Error getting user role: ", error);
         res.status(500).send({ message: "Failed to get role" });
@@ -704,30 +765,35 @@ async function run() {
     });
 
     // ✅ Update user role by id
-    app.patch("/users/role/:id", verifyFBToken, verifyAdmin, async (req, res) => {
-      try {
-        const id = req.params.id;
-        const { role } = req.body; // body থেকে role আসবে: "Admin" | "Buyer" | "Worker"
+    app.patch(
+      "/users/role/:id",
+      verifyFBToken,
+      verifyAdmin,
+      async (req, res) => {
+        try {
+          const id = req.params.id;
+          const { role } = req.body; // body থেকে role আসবে: "Admin" | "Buyer" | "Worker"
 
-        if (!role) {
-          return res.status(400).send({ message: "Role is required" });
+          if (!role) {
+            return res.status(400).send({ message: "Role is required" });
+          }
+
+          const result = await usersCollection.updateOne(
+            { _id: new ObjectId(id) },
+            { $set: { role } }
+          );
+
+          if (result.matchedCount === 0) {
+            return res.status(404).send({ message: "User not found" });
+          }
+
+          res.status(200).send({ message: "Role updated successfully" });
+        } catch (error) {
+          console.error("Update Role Error:", error);
+          res.status(500).send({ message: "Server error" });
         }
-
-        const result = await usersCollection.updateOne(
-          { _id: new ObjectId(id) },
-          { $set: { role } }
-        );
-
-        if (result.matchedCount === 0) {
-          return res.status(404).send({ message: "User not found" });
-        }
-
-        res.status(200).send({ message: "Role updated successfully" });
-      } catch (error) {
-        console.error("Update Role Error:", error);
-        res.status(500).send({ message: "Server error" });
       }
-    });
+    );
 
     // ==================== PING ====================
     await client.db("admin").command({ ping: 1 });

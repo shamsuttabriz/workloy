@@ -23,6 +23,7 @@ import ManageUsers from "../Dashboard/Admin/ManageUsers";
 import ManageTasks from "../Dashboard/Admin/ManageTasks";
 import Forbidden from "../Forbidden";
 import AdminRoutes from "./AdminRoutes";
+import DashboardHome from "../Dashboard/DashboardHome/DashboardHome";
 
 export const router = createBrowserRouter([
   {
@@ -69,6 +70,10 @@ export const router = createBrowserRouter([
       </PrivateRoute>
     ),
     children: [
+      {
+        index: true,
+        Component: DashboardHome,
+      },
       {
         path: "my-tasks",
         Component: MyTasks,
