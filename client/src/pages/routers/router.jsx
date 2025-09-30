@@ -6,7 +6,6 @@ import Login from "../Authentication/Login";
 import Register from "../Authentication/Register";
 import PrivateRoute from "./PrivateRoute";
 import DashboardLayout from "../../layouts/DashboardLayout";
-import Profile from "../Profile";
 import AddTask from "../Dashboard/Buyer/AddTask";
 import PurchaseCoin from "../Dashboard/Buyer/PurchaseCoin";
 import MyTasks from "../Dashboard/Buyer/MyTasks";
@@ -24,6 +23,7 @@ import ManageTasks from "../Dashboard/Admin/ManageTasks";
 import Forbidden from "../Forbidden";
 import AdminRoutes from "./AdminRoutes";
 import DashboardHome from "../Dashboard/DashboardHome/DashboardHome";
+import Profile from "../Profile";
 
 export const router = createBrowserRouter([
   {
@@ -33,14 +33,6 @@ export const router = createBrowserRouter([
       {
         index: true,
         Component: Home,
-      },
-      {
-        path: "/profile",
-        element: (
-          <PrivateRoute>
-            <Profile />
-          </PrivateRoute>
-        ),
       },
       {
         path: "/forbidden",
@@ -73,6 +65,10 @@ export const router = createBrowserRouter([
       {
         index: true,
         Component: DashboardHome,
+      },
+      {
+        path: "profile",
+        Component: Profile,
       },
       {
         path: "my-tasks",

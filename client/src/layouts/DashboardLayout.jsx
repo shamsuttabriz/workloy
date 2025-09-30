@@ -44,7 +44,7 @@ const DashboardLayout = () => {
   };
 
   const menuItem = (to, Icon, label) => (
-    <li>
+    <li key={label}>
       <NavLink
         to={to}
         className={({ isActive }) =>
@@ -59,9 +59,30 @@ const DashboardLayout = () => {
     </li>
   );
 
+  // role based menu items
+  const roleMenus = {
+    Worker: [
+      ["/dashboard/task-list", HiFolderOpen, "Task List"],
+      ["/dashboard/my-submission", HiDocumentText, "My Submissions"],
+      ["/dashboard/withdraw", HiArrowCircleUp, "Withdraw"],
+      ["/dashboard/approved-submission", HiCheckCircle, "Approved Submission"],
+    ],
+    Buyer: [
+      ["/dashboard/my-tasks", HiClipboardList, "My Tasks"],
+      ["/dashboard/add-task", HiPlusCircle, "Add Task"],
+      ["/dashboard/task-review", HiOutlineClipboardCheck, "Task Review"],
+      ["/dashboard/purchase-coin", HiCurrencyDollar, "Purchase Coin"],
+      ["/dashboard/payment-history", HiCreditCard, "Payment History"],
+    ],
+    Admin: [
+      ["/dashboard/withdraw-requests", HiCurrencyDollar, "Withdraw Requests"],
+      ["/dashboard/manage-users", HiUserGroup, "Manage Users"],
+      ["/dashboard/manage-tasks", HiClipboardList, "Manage Tasks"],
+    ],
+  };
+
   return (
     <div className="drawer lg:drawer-open h-screen">
-      {/* drawer toggle for mobile */}
       <input id="dashboard-drawer" type="checkbox" className="drawer-toggle" />
 
       {/* Main content */}
@@ -115,7 +136,7 @@ const DashboardLayout = () => {
         </div>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4">
+        <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>
 
@@ -129,62 +150,17 @@ const DashboardLayout = () => {
 
       {/* Sidebar drawer */}
       <div className="drawer-side">
-        <label
-          htmlFor="dashboard-drawer"
-          className="drawer-overlay lg:hidden"
-        ></label>
+        <label htmlFor="dashboard-drawer" className="drawer-overlay lg:hidden"></label>
         <ul className="menu bg-base-300 min-h-full w-72 p-4 space-y-2">
           <Link to="/" className="mb-6 block">
             <Logo />
           </Link>
 
           {menuItem("/dashboard", HiHome, "Home")}
-          {menuItem("/dashboard/my-tasks", HiClipboardList, "My Tasks")}
-          {menuItem("/dashboard/add-task", HiPlusCircle, "Add Task")}
-          {menuItem(
-            "/dashboard/task-review",
-            HiOutlineClipboardCheck,
-            "Task Review"
-          )}
-          {menuItem(
-            "/dashboard/purchase-coin",
-            HiCurrencyDollar,
-            "Purchase Coin"
-          )}
-          {menuItem(
-            "/dashboard/payment-history",
-            HiCreditCard,
-            "Payment History"
-          )}
-          {menuItem("/dashboard/task-list", HiFolderOpen, "Task List")}
-          {menuItem(
-            "/dashboard/approved-submission",
-            HiCheckCircle,
-            "Approved Submission"
-          )}
-          {menuItem(
-            "/dashboard/my-submission",
-            HiDocumentText,
-            "My Submissions"
-          )}
-          {menuItem("/dashboard/withdraw", HiArrowCircleUp, "Withdraw")}
 
-          {/* Admin Links */}
-          {!roleLoading && role === "Admin" && (
-            <>
-              {menuItem(
-                "/dashboard/withdraw-requests",
-                HiCurrencyDollar,
-                "Withdraw Requests"
-              )}
-              {menuItem("/dashboard/manage-users", HiUserGroup, "Manage Users")}
-              {menuItem(
-                "/dashboard/manage-tasks",
-                HiClipboardList,
-                "Manage Tasks"
-              )}
-            </>
-          )}
+          {/* Render role-based menu */}
+          {!roleLoading &&
+            roleMenus[role]?.map(([to, Icon, label]) => menuItem(to, Icon, label))}
         </ul>
       </div>
     </div>

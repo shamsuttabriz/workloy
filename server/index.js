@@ -634,22 +634,6 @@ async function run() {
       }
     });
 
-    // Admin all Tasks
-    // app.get("/tasks/all", verifyFBToken, async (req, res) => {
-    //   try {
-    //     if (req.decoded.role !== "admin") {
-    //       return res.status(403).send({ message: "Forbidden Access" });
-    //     }
-    //     const tasks = await tasksCollection
-    //       .find({})
-    //       .sort({ completion_date: -1 })
-    //       .toArray();
-    //     res.send(tasks);
-    //   } catch (error) {
-    //     res.status(500).send({ message: "Failed to get all tasks" });
-    //   }
-    // });
-
     // ================ GET SINGLE TASKS ==================
     app.get("/tasks/:id", async (req, res) => {
       try {
@@ -782,6 +766,37 @@ async function run() {
       } catch (error) {
         console.error("Error updating coins: ", error);
         res.status(500).send({ message: "Failed to update coins" });
+      }
+    });
+
+    // Update user (name, image) by email
+    app.put("/users/:email", async (req, res) => {
+      const { email } = req.params;
+      const { name, image } = req.body;
+
+      if (!name && !image) {
+        return res.status(400).json({ message: "Name or image is required" });
+      }
+
+      try {
+        const updateDoc = {};
+        if (name) updateDoc.name = name;
+        if (image) updateDoc.image = image;
+        updateDoc.last_log_in = new Date(); // optional: last update time
+
+        const result = await usersCollection.updateOne(
+          { email },
+          { $set: updateDoc }
+        );
+
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ message: "User not found" });
+        }
+
+        const updatedUser = await usersCollection.findOne({ email });
+        res.json(updatedUser);
+      } catch (err) {
+        res.status(500).json({ message: err.message });
       }
     });
 
