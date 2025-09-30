@@ -99,7 +99,7 @@ npm install
 Create a .env file inside the client folder
 Example:
 ```bash
-VITE_API_URL=http://localhost:5001
+VITE_API_URL=https://server-seven-tau-43.vercel.app
 ```
 
 ```bash
