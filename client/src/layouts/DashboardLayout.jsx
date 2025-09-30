@@ -25,8 +25,6 @@ const DashboardLayout = () => {
   const { user: hello } = useAuth();
   const { role, roleLoading } = useUserRole();
 
-  console.log(role, roleLoading);
-
   const { data, isLoading, error } = useQuery({
     queryKey: ["user", hello?.email],
     queryFn: async () => {
@@ -45,6 +43,22 @@ const DashboardLayout = () => {
     image: hello.photoURL,
   };
 
+  const menuItem = (to, Icon, label) => (
+    <li>
+      <NavLink
+        to={to}
+        className={({ isActive }) =>
+          `flex items-center gap-2 px-2 py-1 rounded-md ${
+            isActive ? "bg-brand text-white" : "text-gray-700 hover:bg-gray-200"
+          }`
+        }
+      >
+        <Icon className="w-5 h-5" />
+        {label}
+      </NavLink>
+    </li>
+  );
+
   return (
     <div className="drawer lg:drawer-open h-screen">
       {/* drawer toggle for mobile */}
@@ -53,10 +67,8 @@ const DashboardLayout = () => {
       {/* Main content */}
       <div className="drawer-content flex flex-col">
         {/* Navbar */}
-        <div className="navbar bg-slate-200 shadow-md px-4 flex justify-between">
-          {/* Left - Logo + toggle button */}
+        <div className="navbar bg-slate-100 shadow-md px-4 py-2 flex justify-between">
           <div className="flex items-center gap-2">
-            {/* Hamburger only on mobile */}
             <label
               htmlFor="dashboard-drawer"
               className="btn btn-square btn-ghost lg:hidden"
@@ -77,25 +89,20 @@ const DashboardLayout = () => {
             </label>
           </div>
 
-          {/* Right - user info + notification */}
-          <div className="flex  items-center gap-2 md:gap-4">
-            {/* Coins + User info */}
-            <div className="flex items-center gap-2 md:gap-4 text-sm md:text-base">
-              <span className="font-semibold">{user.coins} Coins</span>
-              <div className="flex flex-col leading-tight">
-                <span className="font-medium">{user.name}</span>
-                <span className="text-xs text-gray-500">{user.role}</span>
-              </div>
-              <Link to="/dashboard/profile" className="flex items-center gap-2">
-                <img
-                  src={user.image}
-                  alt="user avatar"
-                  className="w-8 h-8 rounded-full border-2 border-brand p-0.5"
-                />
-              </Link>
+          <div className="flex items-center gap-4">
+            <span className="font-semibold">{user.coins} Coins</span>
+            <div className="flex flex-col leading-tight">
+              <span className="font-medium">{user.name}</span>
+              <span className="text-xs text-gray-500">{user.role}</span>
             </div>
+            <Link to="/dashboard/profile">
+              <img
+                src={user.image}
+                alt="user avatar"
+                className="w-8 h-8 rounded-full border-2 border-brand p-0.5"
+              />
+            </Link>
 
-            {/* Notification */}
             <button className="btn btn-ghost btn-circle">
               <div className="indicator">
                 <Bell className="w-5 h-5" />
@@ -108,9 +115,16 @@ const DashboardLayout = () => {
         </div>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto p-4">
           <Outlet />
         </main>
+
+        {/* Footer */}
+        <footer className="bg-slate-200 text-center py-3 shadow-inner mt-auto">
+          <p className="text-sm text-gray-600">
+            &copy; {new Date().getFullYear()} Workloy. All rights reserved.
+          </p>
+        </footer>
       </div>
 
       {/* Sidebar drawer */}
@@ -124,207 +138,51 @@ const DashboardLayout = () => {
             <Logo />
           </Link>
 
-          <li>
-            <NavLink
-              to="/dashboard"
-              className={({ isActive }) =>
-                `flex items-center gap-2 ${
-                  isActive
-                    ? "bg-brand text-white rounded-md px-2 py-1"
-                    : "text-gray-700"
-                }`
-              }
-            >
-              <HiHome className="w-5 h-5" />
-              Home
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/dashboard/my-tasks"
-              className={({ isActive }) =>
-                `flex items-center gap-2 ${
-                  isActive
-                    ? "bg-brand text-white rounded-md px-2 py-1"
-                    : "text-gray-700"
-                }`
-              }
-            >
-              <HiClipboardList className="w-5 h-5" />
-              My Tasks
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/dashboard/add-task"
-              className={({ isActive }) =>
-                `flex items-center gap-2 ${
-                  isActive
-                    ? "bg-brand text-white rounded-md px-2 py-1"
-                    : "text-gray-700"
-                }`
-              }
-            >
-              <HiPlusCircle className="w-5 h-5" />
-              Add Task
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/dashboard/task-review"
-              className={({ isActive }) =>
-                `flex items-center gap-2 ${
-                  isActive
-                    ? "bg-brand text-white rounded-md px-2 py-1"
-                    : "text-gray-700"
-                }`
-              }
-            >
-              <HiOutlineClipboardCheck className="w-5 h-5" />
-              Task Review
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/dashboard/purchase-coin"
-              className={({ isActive }) =>
-                `flex items-center gap-2 ${
-                  isActive
-                    ? "bg-brand text-white rounded-md px-2 py-1"
-                    : "text-gray-700"
-                }`
-              }
-            >
-              <HiCurrencyDollar className="w-5 h-5" />
-              Purchase Coin
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/dashboard/payment-history"
-              className={({ isActive }) =>
-                `flex items-center gap-2 ${
-                  isActive
-                    ? "bg-brand text-white rounded-md px-2 py-1"
-                    : "text-gray-700"
-                }`
-              }
-            >
-              <HiCreditCard className="w-5 h-5" />
-              Payment History
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/dashboard/task-list"
-              className={({ isActive }) =>
-                `flex items-center gap-2 ${
-                  isActive
-                    ? "bg-brand text-white rounded-md px-2 py-1"
-                    : "text-gray-700"
-                }`
-              }
-            >
-              <HiFolderOpen className="w-5 h-5" />
-              Task List
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/dashboard/approved-submission"
-              className={({ isActive }) =>
-                `flex items-center gap-2 ${
-                  isActive
-                    ? "bg-brand text-white rounded-md px-2 py-1"
-                    : "text-gray-700"
-                }`
-              }
-            >
-              <HiCheckCircle className="w-5 h-5" />
-              Approved Submission
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/dashboard/my-submission"
-              className={({ isActive }) =>
-                `flex items-center gap-2 ${
-                  isActive
-                    ? "bg-brand text-white rounded-md px-2 py-1"
-                    : "text-gray-700"
-                }`
-              }
-            >
-              <HiDocumentText className="w-5 h-5" />
-              My Submissions
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/dashboard/withdraw"
-              className={({ isActive }) =>
-                `flex items-center gap-2 ${
-                  isActive
-                    ? "bg-brand text-white rounded-md px-2 py-1"
-                    : "text-gray-700"
-                }`
-              }
-            >
-              <HiArrowCircleUp className="w-5 h-5" />
-              Withdraw
-            </NavLink>
-          </li>
+          {menuItem("/dashboard", HiHome, "Home")}
+          {menuItem("/dashboard/my-tasks", HiClipboardList, "My Tasks")}
+          {menuItem("/dashboard/add-task", HiPlusCircle, "Add Task")}
+          {menuItem(
+            "/dashboard/task-review",
+            HiOutlineClipboardCheck,
+            "Task Review"
+          )}
+          {menuItem(
+            "/dashboard/purchase-coin",
+            HiCurrencyDollar,
+            "Purchase Coin"
+          )}
+          {menuItem(
+            "/dashboard/payment-history",
+            HiCreditCard,
+            "Payment History"
+          )}
+          {menuItem("/dashboard/task-list", HiFolderOpen, "Task List")}
+          {menuItem(
+            "/dashboard/approved-submission",
+            HiCheckCircle,
+            "Approved Submission"
+          )}
+          {menuItem(
+            "/dashboard/my-submission",
+            HiDocumentText,
+            "My Submissions"
+          )}
+          {menuItem("/dashboard/withdraw", HiArrowCircleUp, "Withdraw")}
 
           {/* Admin Links */}
           {!roleLoading && role === "Admin" && (
             <>
-              <li>
-                <NavLink
-                  to="/dashboard/withdraw-requests"
-                  className={({ isActive }) =>
-                    `flex items-center gap-2 ${
-                      isActive
-                        ? "bg-brand text-white rounded-md px-2 py-1"
-                        : "text-gray-700"
-                    }`
-                  }
-                >
-                  <HiCurrencyDollar className="w-5 h-5" />
-                  Withdraw Requests
-                </NavLink>
-              </li>
-
-              <li>
-                <NavLink
-                  to="/dashboard/manage-users"
-                  className={({ isActive }) =>
-                    `flex items-center gap-2 ${
-                      isActive
-                        ? "bg-brand text-white rounded-md px-2 py-1"
-                        : "text-gray-700"
-                    }`
-                  }
-                >
-                  <HiUserGroup className="w-5 h-5" />
-                  Manage Users
-                </NavLink>
-              </li>
-
-              <li>
-                <NavLink
-                  to="/dashboard/manage-tasks"
-                  className={({ isActive }) =>
-                    `flex items-center gap-2 ${
-                      isActive
-                        ? "bg-brand text-white rounded-md px-2 py-1"
-                        : "text-gray-700"
-                    }`
-                  }
-                >
-                  <HiClipboardList className="w-5 h-5" />
-                  Manage Tasks
-                </NavLink>
-              </li>
+              {menuItem(
+                "/dashboard/withdraw-requests",
+                HiCurrencyDollar,
+                "Withdraw Requests"
+              )}
+              {menuItem("/dashboard/manage-users", HiUserGroup, "Manage Users")}
+              {menuItem(
+                "/dashboard/manage-tasks",
+                HiClipboardList,
+                "Manage Tasks"
+              )}
             </>
           )}
         </ul>

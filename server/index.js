@@ -169,34 +169,123 @@ async function run() {
     // });
 
     // ================== ADMIN DASHBOARD STATS ==================
-    app.get("/dashboard/admin-home/admin-stats", verifyFBToken, verifyAdmin, async (req, res) => {
+    app.get(
+      "/dashboard/admin-stats",
+      verifyFBToken,
+      verifyAdmin,
+      async (req, res) => {
+        try {
+          const totalWorkers = await usersCollection.countDocuments({
+            role: "Worker",
+          });
+          const totalBuyers = await usersCollection.countDocuments({
+            role: "Buyer",
+          });
+
+          const coinsAgg = await usersCollection
+            .aggregate([
+              { $group: { _id: null, totalCoins: { $sum: "$coin" } } },
+            ])
+            .toArray();
+
+          const totalAvailableCoins = coinsAgg[0]?.totalCoins || 0;
+
+          const paymentsAgg = await paymentsCollection
+            .aggregate([
+              { $group: { _id: null, totalPayments: { $sum: "$amount" } } },
+            ])
+            .toArray();
+          const totalPayments = paymentsAgg[0]?.totalPayments || 0;
+
+          res.send({
+            totalWorkers,
+            totalBuyers,
+            totalAvailableCoins,
+            totalPayments,
+          });
+        } catch (err) {
+          res.status(500).send({ message: err.message });
+        }
+      }
+    );
+
+    // ================== WORKER DASHBOARD STATS ==================
+    app.get("/dashboard/worker-stats", verifyFBToken, async (req, res) => {
       try {
+        console.log("Worker Home", req.decoded);
 
-        const totalWorkers = await usersCollection.countDocuments({
-          role: "Worker",
+        const email = req.decoded.email;
+
+        // Total submissions
+        const totalSubmissions = await submissionsCollection.countDocuments({
+          worker_email: email,
         });
-        const totalBuyers = await usersCollection.countDocuments({
-          role: "Buyer",
+
+        // Total pending submissions
+        const totalPending = await submissionsCollection.countDocuments({
+          worker_email: email,
+          status: "pending",
         });
 
-        const coinsAgg = await usersCollection
-          .aggregate([{ $group: { _id: null, totalCoins: { $sum: "$coin" } } }])
-          .toArray();
-        const totalAvailableCoins = coinsAgg[0]?.totalCoins || 0;
-
-        const paymentsAgg = await paymentsCollection
+        // Total earning (sum of payable_amount where approved)
+        const earningsAgg = await submissionsCollection
           .aggregate([
-            { $group: { _id: null, totalPayments: { $sum: "$amount" } } },
+            { $match: { worker_email: email, status: "approved" } },
+            {
+              $group: { _id: null, totalEarning: { $sum: "$payable_amount" } },
+            },
           ])
           .toArray();
-        const totalPayments = paymentsAgg[0]?.totalPayments || 0;
 
-        res.send({
-          totalWorkers,
-          totalBuyers,
-          totalAvailableCoins,
-          totalPayments,
+        const totalEarning = earningsAgg[0]?.totalEarning || 0;
+
+        res.send({ totalSubmissions, totalPending, totalEarning });
+      } catch (err) {
+        res.status(500).send({ message: err.message });
+      }
+    });
+
+    // ================== BUYER DASHBOARD STATS ==================
+    app.get("/dashboard/buyer-stats", verifyFBToken, async (req, res) => {
+      try {
+        console.log("Buyer Home", req.decoded);
+
+        const email = req.decoded.email;
+
+        // 1️⃣ Total tasks (যতগুলো task buyer add করেছে)
+        const totalTasks = await tasksCollection.countDocuments({
+          created_by: email,
         });
+
+        // 2️⃣ Total pending workers (sum of required_workers of his tasks)
+        const pendingAgg = await tasksCollection
+          .aggregate([
+            { $match: { created_by: email } },
+            {
+              $group: {
+                _id: null,
+                totalPending: { $sum: "$required_workers" },
+              },
+            },
+          ])
+          .toArray();
+        const totalPending = pendingAgg[0]?.totalPending || 0;
+
+        // 3️⃣ Total payment (sum of total_payable_amount of his tasks)
+        const paymentAgg = await tasksCollection
+          .aggregate([
+            { $match: { created_by: email } },
+            {
+              $group: {
+                _id: null,
+                totalPayment: { $sum: "$total_payable_amount" },
+              },
+            },
+          ])
+          .toArray();
+        const totalPayment = paymentAgg[0]?.totalPayment || 0;
+
+        res.send({ totalTasks, totalPending, totalPayment });
       } catch (err) {
         res.status(500).send({ message: err.message });
       }

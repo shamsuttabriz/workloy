@@ -7,7 +7,7 @@ export default function AdminHome() {
   const { data: stats = {}, isLoading } = useQuery({
     queryKey: ["admin-stats"],
     queryFn: async () => {
-      const res = await axiosSecure.get("/dashboard/admin-home/admin-stats");
+      const res = await axiosSecure.get("/dashboard/admin-stats");
       return res.data;
     },
   });
