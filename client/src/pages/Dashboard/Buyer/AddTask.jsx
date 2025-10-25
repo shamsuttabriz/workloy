@@ -11,57 +11,45 @@ const AddTask = () => {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm();
   const navigate = useNavigate();
-  const [uploading, setUploading] = useState(false);
   const { user } = useAuth();
-  console.log(user, user.email);
   const axiosSecure = useAxiosSecure();
+  const userInfo = useDbUser();
+  const [uploading, setUploading] = useState(false);
 
-  const  userInfo  = useDbUser();
-  console.log(userInfo);
+  const userCoin = userInfo?.coins || 0;
+  const imgbbKey = import.meta.env.VITE_IMGBB_API_KEY;
 
-  const userCoin = userInfo.coins;
+  const requiredWorkers = watch("required_workers") || 0;
+  const payableAmount = watch("payable_amount") || 0;
+  const totalPayable = requiredWorkers * payableAmount;
 
   const saveTask = async (taskData) => {
-    console.log("Task saved:", taskData);
     try {
-      const res = await axiosSecure.post("/tasks", taskData);
-      console.log("Task saved:", res.data);
-      navigate("/dashboard/my-tasks")
+      await axiosSecure.post("/tasks", taskData);
+      navigate("/dashboard/my-tasks");
     } catch (err) {
-      console.error("Error saving task:", err.response?.data || err.message);
+      console.error(err);
+      Swal.fire("Error", "Failed to save task", "error");
     }
   };
 
   const reduceCoin = async (amount) => {
-    console.log(`Reduced coin by: ${amount}`);
-    await axiosSecure.patch(`/users/${user.email}`, {
-      increment: -amount,
-    });
+    await axiosSecure.patch(`/users/${user.email}`, { increment: -amount });
   };
 
-  const imgbbKey = import.meta.env.VITE_IMGBB_API_KEY;
-
   const onSubmit = async (data) => {
-    const totalPayable = data.required_workers * data.payable_amount;
-
-    // 1. Check coin
     if (totalPayable > userCoin) {
-      Swal.fire({
+      return Swal.fire({
         icon: "warning",
-        title: "Not available Coin",
-        text: "Purchase Coin",
-        confirmButtonColor: "#3085d6",
-      }).then(() => {
-        navigate("/dashboard/purchase-coin");
-      });
-
-      return;
+        title: "Not enough coins",
+        text: "Please purchase coins first",
+      }).then(() => navigate("/dashboard/purchase-coin"));
     }
 
-    // 2. Image Upload to imgbb
     setUploading(true);
     const imageFile = data.task_image[0];
     const formData = new FormData();
@@ -75,18 +63,15 @@ const AddTask = () => {
           body: formData,
         }
       );
-
       const imgResponse = await res.json();
       setUploading(false);
 
       if (!imgResponse.success) {
-        Swal.fire("Error", "Image upload failed!", "error");
-        return;
+        return Swal.fire("Error", "Image upload failed!", "error");
       }
 
       const imageUrl = imgResponse.data.url;
 
-      // 3. Save Task with image URL
       await saveTask({
         task_title: data.task_title,
         task_detail: data.task_detail,
@@ -99,7 +84,6 @@ const AddTask = () => {
         created_by: user.email,
       });
 
-      // 4. Reduce Buyer's Coin
       await reduceCoin(totalPayable);
 
       Swal.fire({
@@ -118,9 +102,9 @@ const AddTask = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-light p-4">
-      <div className="w-full max-w-3xl shadow-2xl bg-base-100 rounded-xl p-8">
-        <h2 className="text-2xl font-bold text-center mb-6 text-primary">
+    <div className="min-h-screen bg-gradient-to-r from-sky-50 to-blue-100 flex justify-center items-center px-4 py-12">
+      <div className="w-full max-w-3xl bg-white rounded-2xl shadow-xl p-8 border border-blue-200">
+        <h2 className="text-2xl md:text-3xl font-bold text-center text-blue-700 mb-8">
           ➕ Add New Task
         </h2>
 
@@ -132,7 +116,7 @@ const AddTask = () => {
             </label>
             <input
               type="text"
-              placeholder="Ex: Watch my YouTube video and make a comment"
+              placeholder="Ex: Watch my YouTube video and comment"
               className="input input-bordered w-full"
               {...register("task_title", {
                 required: "Task title is required",
@@ -151,13 +135,13 @@ const AddTask = () => {
               <span className="label-text font-semibold">Task Detail</span>
             </label>
             <textarea
-              placeholder="Detail description of the task"
+              placeholder="Describe the task in detail"
               className="textarea textarea-bordered w-full"
               rows={4}
               {...register("task_detail", {
                 required: "Task detail is required",
               })}
-            ></textarea>
+            />
             {errors.task_detail && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.task_detail.message}
@@ -214,7 +198,9 @@ const AddTask = () => {
             </div>
           </div>
 
-          <div>Total Pay: {0}</div>
+          <p className="text-blue-700 font-semibold text-right">
+            Total Pay: {totalPayable} coins
+          </p>
 
           {/* Completion Date */}
           <div>
@@ -255,7 +241,7 @@ const AddTask = () => {
             )}
           </div>
 
-          {/* Task Image Upload */}
+          {/* Task Image */}
           <div>
             <label className="label">
               <span className="label-text font-semibold">Task Image</span>
@@ -279,7 +265,7 @@ const AddTask = () => {
           <div className="text-center pt-4">
             <button
               type="submit"
-              className="btn btn-primary w-full md:w-1/2"
+              className="btn btn-primary w-full md:w-1/2 bg-blue-600 hover:bg-blue-700 text-white transition"
               disabled={uploading}
             >
               {uploading ? "Uploading..." : "Add Task"}

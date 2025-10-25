@@ -14,7 +14,9 @@ const port = process.env.PORT || 5001;
 app.use(cors());
 app.use(express.json());
 
-const decodedkey = Buffer.from(process.env.FB_SERVICE_KEY, 'base64').toString('utf8');
+const decodedkey = Buffer.from(process.env.FB_SERVICE_KEY, "base64").toString(
+  "utf8"
+);
 var serviceAccount = JSON.parse(decodedkey);
 
 admin.initializeApp({
@@ -59,7 +61,7 @@ async function run() {
         const decoded = await admin.auth().verifyIdToken(token);
         req.decoded = decoded;
 
-        console.log("Decoded token: ", req.decoded);
+        // console.log("Decoded token: ", req.decoded);
         next();
       } catch (error) {
         return res.status(403).send({ message: "Forbidden Access" });
@@ -91,7 +93,7 @@ async function run() {
         const result = await usersCollection.insertOne(user);
         res.send(result);
       } catch (error) {
-        console.log(error);
+        // console.log(error);
         res.status(500).send({ message: "Server error" });
       }
     });
@@ -118,7 +120,6 @@ async function run() {
         if (!user) {
           return res.status(404).send({ message: "User not found" });
         }
-
 
         res.status(200).send(user);
       } catch (error) {
@@ -189,7 +190,7 @@ async function run() {
     // ================== WORKER DASHBOARD STATS ==================
     app.get("/dashboard/worker-stats", verifyFBToken, async (req, res) => {
       try {
-        console.log("Worker Home", req.decoded);
+        // console.log("Worker Home", req.decoded);
 
         const email = req.decoded.email;
 
@@ -225,7 +226,7 @@ async function run() {
     // ================== BUYER DASHBOARD STATS ==================
     app.get("/dashboard/buyer-stats", verifyFBToken, async (req, res) => {
       try {
-        console.log("Buyer Home", req.decoded);
+        // console.log("Buyer Home", req.decoded);
 
         const email = req.decoded.email;
 
@@ -360,7 +361,7 @@ async function run() {
         const withdraw = await withdrawalsCollection.findOne({
           _id: new ObjectId(id),
         });
-        console.log("Withdraw amount: ", withdraw);
+        // console.log("Withdraw amount: ", withdraw);
         if (!withdraw)
           return res.status(404).json({ message: "Request not found" });
         if (withdraw.status === "approved")
@@ -600,24 +601,26 @@ async function run() {
 
         res.send({ role: user.role || "worker" });
       } catch (error) {
-        console.log("Error getting user role: ", error);
+        // console.log("Error getting user role: ", error);
         res.status(500).send({ message: "Failed to get role" });
       }
     });
 
-    // ================ GET SINGLE TASKS ==================
+    // ================ GET SINGLE TASK ==================
     app.get("/tasks/:id", async (req, res) => {
       try {
         const id = req.params.id;
 
-        const task = await tasksCollection.findOne({ _id: new ObjectId(id) });
+        // Fetch task by string _id
+        const task = await tasksCollection.findOne({ _id: id });
 
         if (!task) {
           return res.status(404).send({ message: "Task not found" });
         }
+
         res.send(task);
       } catch (error) {
-        console.error("Error fetching task: ", error);
+        console.error("Error fetching task:", error);
         res.status(500).send({ message: "Failed to fetch task" });
       }
     });
@@ -674,8 +677,8 @@ async function run() {
         // refill amount calculation
         const refillAmount = task.required_workers * task.payable_amount;
         const isUncompleted = new Date(task.completion_date) < new Date();
-        console.log("Ref. Amount: ", refillAmount);
-        console.log("Uncompleted: ", isUncompleted);
+        // console.log("Ref. Amount: ", refillAmount);
+        // console.log("Uncompleted: ", isUncompleted);
         // Increase coins if task uncompleted
         let coinsAdded = 0;
         if (isUncompleted) {
@@ -701,7 +704,7 @@ async function run() {
     app.post("/create-payment-intent", async (req, res) => {
       try {
         const { amountInCents } = req.body;
-        console.log(amountInCents);
+        // console.log(amountInCents);
         if (!amountInCents) {
           return res.status(400).send({ error: "Amount is required" });
         }
@@ -776,7 +779,7 @@ async function run() {
       try {
         const userEmail = req.query.email;
 
-        console.log("Payment Decoded: ", req.decoded);
+        // console.log("Payment Decoded: ", req.decoded);
 
         if (req.decoded.email !== userEmail) {
           return res.status(403).send({ message: "Forbidden Access" });

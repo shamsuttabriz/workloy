@@ -7,7 +7,9 @@ function AuthLayout() {
   return (
     <div className="mx-4 md:px-6 md:max-w-7xl md:mx-auto ">
       <div className="my-4">
-        <Logo />
+        <Link to="/">
+          <Logo />
+        </Link>
       </div>
       <div className="hero-content -mx-3 md:mx-0 flex items-center justify-between flex-col-reverse lg:flex-row">
         <div className="md:flex-1 w-full">

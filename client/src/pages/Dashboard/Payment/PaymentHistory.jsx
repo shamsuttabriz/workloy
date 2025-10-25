@@ -8,57 +8,65 @@ const PaymentHistory = () => {
   const { user } = useAuth();
   const axiosSecure = useAxiosSecure();
 
-  const { isLoading, data: payHistoryInfo } = useQuery({
-    queryKey: ["payments", user.email],
+  // ✅ Fetch payment data
+  const { isLoading, data: payHistoryInfo = [] } = useQuery({
+    queryKey: ["payments", user?.email],
+    enabled: !!user?.email,
     queryFn: async () => {
       const res = await axiosSecure.get(`/payments?email=${user.email}`);
       return res.data;
     },
   });
 
+  // ✅ Loading state
   if (isLoading) {
     return <LoadingPage />;
   }
 
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-semibold mb-4">Payment History</h2>
+    <div className="min-h-screen bg-gradient-to-r from-sky-50 to-blue-100 p-4 sm:p-8">
+      <h2 className="text-3xl font-bold text-blue-800 mb-6 text-center">
+        Payment History
+      </h2>
 
-      {payHistoryInfo?.length === 0 ? (
-        <p className="text-gray-500">No payments found.</p>
+      {payHistoryInfo.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-md p-6 text-center text-gray-600">
+          No payments found.
+        </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border border-gray-200 rounded-lg">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="py-2 px-4 border-b">Transaction ID</th>
-                <th className="py-2 px-4 border-b">Amount</th>
-                <th className="py-2 px-4 border-b">Payment Method</th>
-                <th className="py-2 px-4 border-b">Date</th>
-                <th className="py-2 px-4 border-b">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {payHistoryInfo.map((payment) => (
-                <tr key={payment.transactionId} className="text-center">
-                  <td className="py-2 px-4 border-b break-words">
-                    {payment.transactionId}
-                  </td>
-                  <td className="py-2 px-4 border-b">${payment.amount}</td>
-                  <td className="py-2 px-4 border-b">
-                    {payment.paymentMethod[0]}
-                  </td>
-                  <td className="py-2 px-4 border-b">
-                    {new Date(payment.paid_at).toLocaleDateString()}{" "}
-                    {new Date(payment.paid_at).toLocaleTimeString()}
-                  </td>
-                  <td className="py-2 px-4 border-b text-green-600 font-medium">
-                    Paid
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {payHistoryInfo.map((payment) => (
+            <div
+              key={payment.transactionId}
+              className="bg-white rounded-2xl shadow-md p-5 border border-blue-100 transition-transform transform hover:-translate-y-1 hover:shadow-lg"
+            >
+              <h3 className="text-lg font-semibold text-blue-700 break-words mb-2">
+                Transaction ID:
+              </h3>
+              <p className="text-sm text-gray-700 break-words mb-3">
+                {payment.transactionId}
+              </p>
+
+              <div className="flex flex-col gap-1 text-gray-700">
+                <p>
+                  <span className="font-medium text-blue-600">Amount:</span> $
+                  {payment.amount}
+                </p>
+                <p>
+                  <span className="font-medium text-blue-600">
+                    Payment Method:
+                  </span>{" "}
+                  {payment.paymentMethod[0]}
+                </p>
+                <p>
+                  <span className="font-medium text-blue-600">Date:</span>{" "}
+                  {new Date(payment.paid_at).toLocaleDateString()}{" "}
+                  {new Date(payment.paid_at).toLocaleTimeString()}
+                </p>
+                <p className="text-green-600 font-semibold mt-1">✅ Paid</p>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

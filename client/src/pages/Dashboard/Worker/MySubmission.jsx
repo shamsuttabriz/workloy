@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import useAuth from "../../../hooks/useAuth";
+import { Link } from "react-router";
 
 export default function MySubmission() {
   const axiosSecure = useAxiosSecure();
@@ -16,122 +17,98 @@ export default function MySubmission() {
 
   if (isLoading)
     return (
-      <p className="text-center mt-20 text-xl font-medium text-gray-500">
-        Loading...
-      </p>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-sky-50 to-blue-100">
+        <p className="text-xl font-medium text-blue-600 animate-pulse">
+          Loading your submissions...
+        </p>
+      </div>
     );
 
   if (!submissions.length)
     return (
-      <p className="text-center mt-20 text-xl font-medium text-gray-500">
-        No submissions found.
-      </p>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-sky-50 to-blue-100">
+        <p className="text-xl font-medium text-blue-600">
+          No submissions found.
+        </p>
+      </div>
     );
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6 my-12">
-      <h1 className="text-3xl font-extrabold text-gray-800 mb-10 text-center">
-        My Submissions
-      </h1>
+    <div className="min-h-screen bg-gradient-to-b from-sky-50 to-blue-100 py-10 px-4 md:px-8">
+      <div className="max-w-8xl mx-auto">
+        <div className="text-center mb-6">
+          <h2 className="text-3xl font-bold text-blue-700 mb-2">
+            My Submissions
+          </h2>
+          <p className="text-gray-600">
+            My submission demonstrates a clear understanding of the topic.
+          </p>
+        </div>
 
-      {/* ---------- ✅ Large Device Table ---------- */}
-      <div className="hidden md:block overflow-x-auto rounded-lg shadow">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-100 text-left text-gray-700">
-              <th className="py-3 px-4">Task Title</th>
-              <th className="py-3 px-4">Amount</th>
-              <th className="py-3 px-4">Status</th>
-              <th className="py-3 px-4">Date</th>
-              <th className="py-3 px-4">Submission Details</th>
-            </tr>
-          </thead>
-          <tbody>
-            {submissions.map((sub) => (
-              <tr
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {submissions.map((sub) => {
+            const statusColor =
+              sub.status === "pending"
+                ? "bg-yellow-100 text-yellow-800"
+                : sub.status === "approved"
+                ? "bg-green-100 text-green-800"
+                : "bg-red-100 text-red-800";
+
+            return (
+              <div
                 key={sub._id}
-                className="border-b hover:bg-gray-50 transition"
+                className="bg-white rounded-lg shadow p-4 flex flex-col justify-between border border-blue-100 hover:shadow-lg hover:scale-[1.02] transition-transform duration-200"
               >
-                <td className="py-3 px-4 font-medium text-gray-800">
-                  {sub.task_title}
-                </td>
-                <td className="py-3 px-4 text-gray-700">
-                  ${sub.payable_amount}
-                </td>
-                <td className="py-3 px-4">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      sub.status === "pending"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : sub.status === "approved"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {sub.status.toUpperCase()}
-                  </span>
-                </td>
-                <td className="py-3 px-4 text-gray-700">
-                  {new Date(sub.current_date).toLocaleDateString()}
-                </td>
-                <td className="py-3 px-4 text-gray-600 text-sm">
-                  {sub.submission_details}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <h2 className="text-xl font-semibold text-gray-800 leading-snug">
+                      {sub.task_title}
+                    </h2>
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${statusColor}`}
+                    >
+                      {sub.status.toUpperCase()}
+                    </span>
+                  </div>
 
-      {/* ---------- ✅ Small Device Cards ---------- */}
-      <div className="grid gap-6 md:hidden">
-        {submissions.map((sub) => (
-          <div
-            key={sub._id}
-            className="bg-white shadow-lg rounded-xl border border-gray-200 overflow-hidden hover:scale-105 transition-transform duration-300"
-          >
-            <div className="p-5">
-              <div className="flex justify-between items-center mb-3">
-                <h2 className="text-xl font-semibold text-gray-800">
-                  {sub.task_title}
-                </h2>
-                <span
-                  className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    sub.status === "pending"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : sub.status === "approved"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-red-100 text-red-800"
-                  }`}
+                  <p className="text-gray-600 mb-2">
+                    <strong>Buyer:</strong> {sub.buyer_name || "Unknown Buyer"}
+                  </p>
+
+                  <p className="text-gray-600 mb-2">
+                    <strong>Amount:</strong> ${sub.payable_amount ?? 0}
+                  </p>
+
+                  <p className="text-gray-600 mb-2">
+                    <strong>Date:</strong>{" "}
+                    {new Date(sub.current_date).toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </p>
+
+                  <div className="mt-3 bg-sky-50 p-3 rounded-xl border border-sky-100">
+                    <h3 className="font-medium text-blue-700 mb-1">
+                      Submission Details:
+                    </h3>
+                    <p className="text-gray-600 text-sm leading-relaxed">
+                      {sub.submission_details}
+                    </p>
+                  </div>
+                </div>
+
+                {/* ✅ Button like TaskList */}
+                <Link
+                  to={`/dashboard/task-details/${sub._id}`}
+                  className="w-full py-2 block mt-3 text-center bg-gradient-to-r from-blue-500 to-sky-400 hover:from-blue-600 hover:to-sky-500 text-white font-medium rounded-xl shadow transition-all duration-300"
                 >
-                  {sub.status.toUpperCase()}
-                </span>
+                  View Details
+                </Link>
               </div>
-
-              <p className="text-gray-600 mb-2">
-                <strong>Buyer:</strong> {sub.buyer_name}
-              </p>
-
-              <p className="text-gray-600 mb-2">
-                <strong>Amount:</strong> ${sub.payable_amount}
-              </p>
-
-              <p className="text-gray-600 mb-2">
-                <strong>Date:</strong>{" "}
-                {new Date(sub.current_date).toLocaleDateString()}
-              </p>
-
-              <div className="mt-3 bg-gray-50 p-3 rounded-lg">
-                <h3 className="font-medium text-gray-700 mb-1">
-                  Submission Details:
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  {sub.submission_details}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
+            );
+          })}
+        </div>
       </div>
     </div>
   );

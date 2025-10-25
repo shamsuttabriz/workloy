@@ -6,7 +6,7 @@ export default function ManageUsers() {
   const axiosSecure = useAxiosSecure();
   const queryClient = useQueryClient();
 
-  // ✅ Load all users
+  // ✅ Fetch all users
   const {
     data: users = [],
     isLoading,
@@ -19,9 +19,7 @@ export default function ManageUsers() {
     },
   });
 
-  console.log(users);
-
-  // ✅ Delete user
+  // ✅ Delete user mutation
   const deleteMutation = useMutation({
     mutationFn: async (id) => await axiosSecure.delete(`/users/${id}`),
     onSuccess: () => {
@@ -31,7 +29,7 @@ export default function ManageUsers() {
     onError: () => Swal.fire("Error", "Could not delete user", "error"),
   });
 
-  // ✅ Update role
+  // ✅ Update user role mutation
   const roleMutation = useMutation({
     mutationFn: async ({ id, role }) =>
       await axiosSecure.patch(`/users/role/${id}`, { role }),
@@ -42,17 +40,34 @@ export default function ManageUsers() {
     onError: () => Swal.fire("Error", "Could not update role", "error"),
   });
 
-  if (isLoading) return <p>Loading users...</p>;
-  if (isError) return <p>Failed to load users</p>;
+  // ✅ Handle state
+  if (isLoading)
+    return (
+      <p className="text-center text-blue-700 mt-8 text-lg font-medium">
+        Loading users...
+      </p>
+    );
 
-  if (users.length === 0 ) {
-    return <p className="font-semibold text-2xl text-center my-5">User not found</p>;
-  }
+  if (isError)
+    return (
+      <p className="text-center text-red-600 mt-8 text-lg font-medium">
+        Failed to load users
+      </p>
+    );
 
+  if (users.length === 0)
+    return (
+      <p className="text-center text-blue-700 font-semibold text-2xl my-10">
+        No users found
+      </p>
+    );
+
+  // ✅ Handle role change
   const handleRoleChange = (id, newRole) => {
     roleMutation.mutate({ id, role: newRole });
   };
 
+  // ✅ Handle delete
   const handleDelete = (id) => {
     Swal.fire({
       title: "Are you sure?",
@@ -61,63 +76,56 @@ export default function ManageUsers() {
       showCancelButton: true,
       confirmButtonText: "Yes, delete",
     }).then((result) => {
-      if (result.isConfirmed) {
-        deleteMutation.mutate(id);
-      }
+      if (result.isConfirmed) deleteMutation.mutate(id);
     });
   };
 
+  // ✅ UI
   return (
-    <div className="p-4 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Manage Users</h1>
+    <div className="min-h-screen bg-gradient-to-r from-sky-100 to-blue-200 p-6">
+      <h1 className="text-3xl font-bold text-center text-blue-800 mb-10">
+        Manage Users
+      </h1>
 
-      <table className="w-full border border-gray-200">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="p-2 border">Photo</th>
-            <th className="p-2 border">Name</th>
-            <th className="p-2 border">Email</th>
-            <th className="p-2 border">Role</th>
-            <th className="p-2 border">Coins</th>
-            <th className="p-2 border">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((u) => (
-            <tr key={u._id} className="text-center">
-              <td className="p-2 border">
-                <img
-                  src={u.image}
-                  alt={u.name}
-                  className="w-10 h-10 rounded-full mx-auto"
-                />
-              </td>
-              <td className="p-2 border">{u.name}</td>
-              <td className="p-2 border">{u.email}</td>
-              <td className="p-2 border">
-                <select
-                  value={u.role}
-                  onChange={(e) => handleRoleChange(u._id, e.target.value)}
-                  className="border rounded p-1"
-                >
-                  <option value="Admin">Admin</option>
-                  <option value="Buyer">Buyer</option>
-                  <option value="Worker">Worker</option>
-                </select>
-              </td>
-              <td className="p-2 border">{u.coins}</td>
-              <td className="p-2 border space-x-2">
-                <button
-                  onClick={() => handleDelete(u._id)}
-                  className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                >
-                  Remove
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+        {users.map((user) => (
+          <div
+            key={user._id}
+            className="bg-white p-6 rounded-2xl shadow-lg flex flex-col items-center text-blue-900 hover:shadow-xl hover:scale-105 transition-all duration-200"
+          >
+            <img
+              src={user.image || "https://tinyurl.com/h3ehhkse"}
+              alt={user.name || "User"}
+              className="w-20 h-20 rounded-full mb-3 border-2 border-blue-300 object-cover"
+            />
+
+            <h2 className="font-semibold text-lg mb-1">
+              {user.name || "Unknown User"}
+            </h2>
+            <p className="text-sm mb-1 break-all">
+              {user.email || "No email available"}
+            </p>
+            <p className="text-sm mb-3 font-medium">Coins: {user.coins ?? 0}</p>
+
+            <select
+              value={user.role || "Buyer"}
+              onChange={(e) => handleRoleChange(user._id, e.target.value)}
+              className="border border-blue-300 rounded-md p-2 text-blue-900 text-center w-full mb-3 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            >
+              <option value="Admin">Admin</option>
+              <option value="Buyer">Buyer</option>
+              <option value="Worker">Worker</option>
+            </select>
+
+            <button
+              onClick={() => handleDelete(user._id)}
+              className="bg-red-500 text-white px-4 py-2 rounded-md w-full hover:bg-red-600 transition-colors duration-200"
+            >
+              Remove
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

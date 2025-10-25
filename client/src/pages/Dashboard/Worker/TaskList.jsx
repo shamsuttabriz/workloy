@@ -1,14 +1,13 @@
-// WorkerTasksList.jsx
 import React from "react";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import LoadingPage from "../../shared/LoadingPage";
 
 export default function TaskList() {
-  const navigate = useNavigate();
   const axiosSecure = useAxiosSecure();
 
+  // ✅ Fetch available tasks
   const {
     data: tasks = [],
     isLoading,
@@ -22,6 +21,7 @@ export default function TaskList() {
     },
   });
 
+  // ✅ Format deadline date
   const fmtDate = (d) => {
     if (!d) return "No deadline";
     try {
@@ -41,28 +41,37 @@ export default function TaskList() {
   // ✅ Error State
   if (isError)
     return (
-      <div className="text-red-500 text-center">
-        {error?.message || "Failed to load tasks"}
+      <div className="text-red-500 text-center mt-10 font-medium">
+        {error?.message || "Failed to load tasks."}
       </div>
     );
 
   // ✅ Empty State
   if (!tasks.length)
     return (
-      <div className="text-center text-gray-500">
+      <div className="text-center text-gray-600 mt-10 text-lg font-medium">
         No available tasks right now.
       </div>
     );
 
   // ✅ Success State
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-semibold mb-4">Available Tasks</h2>
+    <div className=" py-10 px-4 md:px-8 bg-gradient-to-br from-sky-50 to-blue-100 min-h-screen rounded-lg">
+      {/* Header */}
+      <div className="text-center mb-6">
+        <h2 className="text-3xl font-bold text-blue-700 mb-2">
+          Available Tasks
+        </h2>
+        <p className="text-gray-600">
+          Explore the latest tasks and start earning today!
+        </p>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Task Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {tasks.map((task) => {
-          const title = task.task_title || "Untitled task";
-          const buyer = task.created_by || "Unknown buyer";
+          const title = task.task_title || "Untitled Task";
+          const buyer = task.created_by || "Unknown Buyer";
           const completion = fmtDate(task.completion_date);
           const payable = task.payable_amount ?? 0;
           const required = task.required_worker ?? task.required_workers ?? 0;
@@ -71,33 +80,40 @@ export default function TaskList() {
           return (
             <div
               key={key}
-              className="bg-white rounded-lg shadow p-4 flex flex-col justify-between"
+              className="bg-white/90 backdrop-blur-sm border border-blue-100 rounded-2xl shadow-md p-5 flex flex-col justify-between transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
             >
+              {/* Task Info */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-1">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">
                   {title}
                 </h3>
-                <p className="text-sm text-gray-600">
-                  Buyer:
-                  <span className="font-medium text-gray-800">{buyer}</span>
+
+                <p className="text-sm text-gray-600 mb-1">
+                  <span className="font-medium text-gray-800">Buyer:</span>{" "}
+                  {buyer}
+                </p>
+                <p className="text-sm text-gray-600 mb-1">
+                  <span className="font-medium text-gray-800">Deadline:</span>{" "}
+                  {completion}
+                </p>
+                <p className="text-sm text-gray-600 mb-1">
+                  <span className="font-medium text-gray-800">Payable:</span>{" "}
+                  {payable} Coins
                 </p>
                 <p className="text-sm text-gray-600">
-                  Deadline: <span className="font-medium">{completion}</span>
-                </p>
-                <p className="text-sm text-gray-600">
-                  Payable: <span className="font-medium">{payable}</span>
-                </p>
-                <p className="text-sm text-gray-600">
-                  Required Workers:
-                  <span className="font-medium">{required}</span>
+                  <span className="font-medium text-gray-800">
+                    Required Workers:
+                  </span>{" "}
+                  {required}
                 </p>
               </div>
 
+              {/* Button */}
               <div className="mt-4">
                 <Link
                   to={`/dashboard/task-details/${task._id}`}
                   aria-label={`View details for ${title}`}
-                  className="w-full py-2 block text-center bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition"
+                  className="w-full py-2 block text-center bg-gradient-to-r from-blue-500 to-sky-400 hover:from-blue-600 hover:to-sky-500 text-white font-medium rounded-xl shadow transition-all duration-300"
                 >
                   View Details
                 </Link>

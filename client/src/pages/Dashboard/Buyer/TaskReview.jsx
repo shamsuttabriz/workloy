@@ -17,11 +17,12 @@ export default function TaskReview() {
     },
   });
 
-  
-
-  if (isLoading) return <p className="text-center mt-20">Loading...</p>;
+  if (isLoading)
+    return <p className="text-center mt-20 text-blue-600">Loading...</p>;
   if (!submissions.length)
-    return <p className="text-center mt-20">No pending submissions.</p>;
+    return (
+      <p className="text-center mt-20 text-gray-500">No pending submissions.</p>
+    );
 
   const handleApprove = async (id) => {
     try {
@@ -66,55 +67,54 @@ export default function TaskReview() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-4 sm:p-6">
-      <h1 className="text-3xl font-bold mb-6 text-center">Task To Review</h1>
+    <div className="min-h-screen bg-gradient-to-r from-sky-50 to-blue-100 p-4 sm:p-6">
+      <h1 className="text-3xl font-bold mb-6 text-center text-blue-800">
+        Task To Review
+      </h1>
 
-      <div className="overflow-x-auto rounded-lg shadow ring-1 ring-black ring-opacity-5">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Worker</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Task Title</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Amount</th>
-              <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">View Submission</th>
-              <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Actions</th>
-            </tr>
-          </thead>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {submissions.map((sub) => (
+          <div
+            key={sub._id}
+            className="bg-white rounded-2xl shadow-md p-5 border border-blue-100 hover:shadow-lg transition-all"
+          >
+            <h3 className="text-xl font-semibold text-blue-700 mb-2 break-words">
+              {sub.task_title}
+            </h3>
+            <p className="text-gray-700 mb-1">
+              <span className="font-medium text-blue-600">Worker:</span>{" "}
+              {sub.worker_name}
+            </p>
+            <p className="text-gray-700 mb-3">
+              <span className="font-medium text-blue-600">Amount:</span> $
+              {sub.payable_amount}
+            </p>
 
-          <tbody className="divide-y divide-gray-200 bg-white">
-            {submissions.map((sub) => (
-              <tr key={sub._id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-4 py-3 text-sm font-medium text-gray-800">{sub.worker_name}</td>
-                <td className="px-4 py-3 text-sm text-gray-700">{sub.task_title}</td>
-                <td className="px-4 py-3 text-sm text-gray-700">${sub.payable_amount}</td>
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-2">
+              <button
+                onClick={() => setModalData(sub)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md text-sm font-medium"
+              >
+                View Submission
+              </button>
 
-                <td className="px-4 py-3 text-center">
-                  <button
-                    onClick={() => setModalData(sub)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md text-sm font-medium"
-                  >
-                    View
-                  </button>
-                </td>
-
-                <td className="px-4 py-3 flex justify-center gap-2">
-                  <button
-                    onClick={() => handleApprove(sub._id)}
-                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-md text-sm font-medium"
-                  >
-                    Approve
-                  </button>
-                  <button
-                    onClick={() => handleReject(sub._id)}
-                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-md text-sm font-medium"
-                  >
-                    Reject
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleApprove(sub._id)}
+                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-md text-sm font-medium"
+                >
+                  Approve
+                </button>
+                <button
+                  onClick={() => handleReject(sub._id)}
+                  className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-md text-sm font-medium"
+                >
+                  Reject
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* ----- Modal Component ----- */}

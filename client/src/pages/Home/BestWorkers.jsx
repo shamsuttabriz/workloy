@@ -4,8 +4,8 @@ export default function BestWorkers() {
   const topWorkers = [...workers].sort((a, b) => b.coins - a.coins).slice(0, 6);
 
   return (
-    <section className="max-w-7xl mx-auto px-4 py-10">
-      <div className=" mb-15">
+    <section className="max-w-7xl mx-auto px-4 md:px-0 py-10">
+      <div className="mb-15">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-2 text-brand-dark">
           <p className="mb-2"> 🌟 </p> <p>Best Workers</p>
         </h2>
@@ -35,7 +35,9 @@ export default function BestWorkers() {
               </h3>
               <p className="text-natural-light">
                 Available Coins:
-                <span className="ml-1 font-bold text-accant">{worker.coins}</span>
+                <span className="ml-1 font-bold text-accant">
+                  {worker.coins}
+                </span>
               </p>
             </div>
           </div>

@@ -10,9 +10,7 @@ export default function MyTasks() {
   const axiosSecure = useAxiosSecure();
   const [editingTask, setEditingTask] = useState(null);
 
-  /* ------------------------------
-   * Load all tasks using TanStack Query
-   * ------------------------------ */
+  // ✅ Load all tasks
   const {
     data: tasks = [],
     isLoading,
@@ -23,26 +21,22 @@ export default function MyTasks() {
     enabled: !!user?.email,
     queryFn: async () => {
       const res = await axiosSecure.get(`/tasks?email=${user.email}`);
-      // completion_date with descending sort
       return res?.data?.sort(
         (a, b) => new Date(b.completion_date) - new Date(a.completion_date)
       );
     },
   });
 
-  
+  if (isLoading) return <LoadingPage />;
+  if (isError)
+    return (
+      <p className="p-4 text-center text-red-500">Failed to load tasks.</p>
+    );
 
-  if (isLoading) {
-    return <LoadingPage />;
-  }
-
-  /* ------------------------------
-   * Update Task
-   * ------------------------------ */
+  // ✅ Update Task
   const handleUpdate = async (e) => {
     e.preventDefault();
     const { task_title, task_detail, submission_info } = editingTask;
-
     try {
       const res = await axiosSecure.put(`/tasks/${editingTask._id}`, {
         task_title,
@@ -53,17 +47,14 @@ export default function MyTasks() {
       if (res.data?.message) {
         Swal.fire("✅ Updated", res.data.message, "success");
         setEditingTask(null);
-        refetch(); // ✅ আপডেটের পর টাস্ক লিস্ট রিফ্রেশ
+        refetch();
       }
-    } catch (error) {
-      console.error(error);
+    } catch {
       Swal.fire("❗ Error", "Failed to update task", "error");
     }
   };
 
-  /* ------------------------------
-   * Delete Task
-   * ------------------------------ */
+  // ✅ Delete Task
   const handleDelete = async (task) => {
     const confirm = await Swal.fire({
       title: "Are you sure?",
@@ -92,78 +83,85 @@ export default function MyTasks() {
         Swal.fire("✅ Deleted", "Task deleted.", "success");
       }
 
-      refetch(); 
-    } catch (error) {
-      console.error(error);
+      refetch();
+    } catch {
       Swal.fire("❗ Error", "Failed to delete task", "error");
     }
   };
 
-  /* ------------------------------
-   * Loading & Error State
-   * ------------------------------ */
-  if (isLoading) return <p className="p-4">Loading tasks...</p>;
-  if (isError) return <p className="p-4 text-red-500">Failed to load tasks.</p>;
-
-  /* ------------------------------
-   * JSX
-   * ------------------------------ */
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4 text-center sm:text-left">
+    <div className="min-h-screen bg-gradient-to-r from-sky-50 to-blue-100 p-4 sm:p-6">
+      <h2 className="text-3xl font-bold mb-6 text-center text-blue-800">
         My Tasks
       </h2>
 
-      <div className="overflow-x-auto rounded-lg border shadow-sm">
-        <table className="table table-zebra w-full text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th>Title</th>
-              <th className="min-w-[140px]">Detail</th>
-              <th>Workers</th>
-              <th>Payable</th>
-              <th className="min-w-[120px]">Completion Date</th>
-              <th>Total Payable</th>
-              <th className="min-w-[140px]">Submission Info</th>
-              <th className="text-center">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tasks.map((task) => (
-              <tr key={task._id} className="hover">
-                <td>{task.task_title}</td>
-                <td>{task.task_detail}</td>
-                <td>{task.required_workers}</td>
-                <td>{task.payable_amount}</td>
-                <td>{new Date(task.completion_date).toLocaleDateString()}</td>
-                <td>{task.total_payable_amount}</td>
-                <td>{task.submission_info}</td>
-                <td>
-                  <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                    <button
-                      onClick={() => setEditingTask(task)}
-                      className="btn btn-xs sm:btn-sm bg-blue-500 hover:bg-blue-600 text-white"
-                    >
-                      Update
-                    </button>
-                    <button
-                      onClick={() => handleDelete(task)}
-                      className="btn btn-xs sm:btn-sm bg-red-500 hover:bg-red-600 text-white"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* ✅ Card Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {tasks.map((task) => (
+          <div
+            key={task._id}
+            className="bg-white shadow-md rounded-xl p-5 border border-blue-100 hover:shadow-lg transition-all duration-200"
+          >
+            <h3 className="text-xl font-semibold text-blue-700 mb-2">
+              {task.task_title}
+            </h3>
+            <p className="text-gray-700 mb-3 text-sm">
+              <span className="font-medium text-blue-600">Detail:</span>{" "}
+              {task.task_detail}
+            </p>
+
+            <div className="text-sm text-gray-600 space-y-1 mb-3">
+              <p>
+                <span className="font-medium text-blue-600">Workers:</span>{" "}
+                {task.required_workers}
+              </p>
+              <p>
+                <span className="font-medium text-blue-600">Payable:</span>{" "}
+                {task.payable_amount}
+              </p>
+              <p>
+                <span className="font-medium text-blue-600">Completion:</span>{" "}
+                {new Date(task.completion_date).toLocaleDateString()}
+              </p>
+              <p>
+                <span className="font-medium text-blue-600">
+                  Total Payable:
+                </span>{" "}
+                {task.total_payable_amount}
+              </p>
+              <p className="break-words">
+                <span className="font-medium text-blue-600">
+                  Submission Info:
+                </span>{" "}
+                {task.submission_info}
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setEditingTask(task)}
+                className="btn btn-sm bg-blue-500 hover:bg-blue-600 text-white"
+              >
+                Update
+              </button>
+              <button
+                onClick={() => handleDelete(task)}
+                className="btn btn-sm bg-red-500 hover:bg-red-600 text-white"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
 
+      {/* ✅ Edit Modal */}
       {editingTask && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-2">
           <div className="bg-white w-full max-w-md p-6 rounded-xl shadow-lg relative">
-            <h3 className="text-xl font-bold mb-4 text-center">Update Task</h3>
+            <h3 className="text-xl font-bold mb-4 text-center text-blue-600">
+              Update Task
+            </h3>
             <form onSubmit={handleUpdate} className="space-y-3">
               <input
                 type="text"

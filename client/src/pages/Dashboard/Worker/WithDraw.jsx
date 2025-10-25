@@ -205,7 +205,7 @@ const WithDraw = () => {
               <button
                 type="submit"
                 disabled={mutation.isLoading}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg text-lg font-medium hover:bg-blue-700 transition"
+                className="w-full py-2 block mt-3 text-center bg-gradient-to-r from-blue-500 to-sky-400 hover:from-blue-600 hover:to-sky-500 text-white font-medium rounded-xl shadow transition-all duration-300"
               >
                 {mutation.isLoading ? "Submitting..." : "Submit Request"}
               </button>

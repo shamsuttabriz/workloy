@@ -31,25 +31,32 @@ const DashboardLayout = () => {
       const res = await axiosSecure.get(`/users/${hello?.email}`);
       return res.data;
     },
+    enabled: !!hello?.email,
   });
 
-  if (isLoading) return <LoadingPage />;
-  if (error) return <p>Something went wrong here</p>;
+  if (isLoading || roleLoading) return <LoadingPage />;
+  if (error) return <p>Something went wrong!</p>;
 
   const user = {
-    name: hello.displayName,
-    role: data.role,
-    coins: data.coins,
-    image: hello.photoURL,
+    name: hello?.displayName || "Unknown User",
+    role: data?.role || "User",
+    coins: data?.coins || 0,
+    image:
+      hello?.photoURL ||
+      "https://cdn-icons-png.flaticon.com/512/149/149071.png",
   };
 
-  const menuItem = (to, Icon, label) => (
+  // ✅ Menu item helper
+  const menuItem = (to, Icon, label, end = false) => (
     <li key={label}>
       <NavLink
         to={to}
+        end={end}
         className={({ isActive }) =>
-          `flex items-center gap-2 px-2 py-1 rounded-md ${
-            isActive ? "bg-brand text-white" : "text-gray-700 hover:bg-gray-200"
+          `flex items-center gap-2 px-3 py-2 rounded-md transition-colors ${
+            isActive
+              ? "bg-gradient-to-r from-blue-500 to-sky-400 text-white shadow-md"
+              : "text-gray-700 hover:bg-blue-100 hover:text-blue-600"
           }`
         }
       >
@@ -59,7 +66,7 @@ const DashboardLayout = () => {
     </li>
   );
 
-  // role based menu items
+  // ✅ Role-based menu
   const roleMenus = {
     Worker: [
       ["/dashboard/task-list", HiFolderOpen, "Task List"],
@@ -82,14 +89,32 @@ const DashboardLayout = () => {
   };
 
   return (
-    <div className="drawer lg:drawer-open h-screen">
+    <div className="drawer lg:drawer-open bg-gradient-to-br from-sky-100 to-blue-50 min-h-screen">
+      {/* Drawer toggle */}
       <input id="dashboard-drawer" type="checkbox" className="drawer-toggle" />
 
+      {/* Sidebar */}
+      <div className="drawer-side">
+        <label htmlFor="dashboard-drawer" className="drawer-overlay"></label>
+        <aside className="fixed top-16 md:top-0 left-0 h-screen w-72 bg-white p-4 flex flex-col shadow-lg">
+          <Link to="/" className="mb-3 md:mb-6 block">
+            <Logo />
+          </Link>
+          <ul className="menu space-y-2 flex-1 overflow-y-auto">
+            {menuItem("/dashboard", HiHome, "Home", true)}
+            {roleMenus[role]?.map(([to, Icon, label]) =>
+              menuItem(to, Icon, label)
+            )}
+          </ul>
+        </aside>
+      </div>
+
       {/* Main content */}
-      <div className="drawer-content flex flex-col">
+      <div className="drawer-content flex flex-col min-h-screen lg:ml-72">
         {/* Navbar */}
-        <div className="navbar bg-slate-100 shadow-md px-4 py-2 flex justify-between">
+        <div className="navbar bg-white/80 backdrop-blur-md shadow-md px-4 py-2 flex justify-between items-center sticky top-0 z-30">
           <div className="flex items-center gap-2">
+            {/* Hamburger for mobile */}
             <label
               htmlFor="dashboard-drawer"
               className="btn btn-square btn-ghost lg:hidden"
@@ -108,26 +133,31 @@ const DashboardLayout = () => {
                 />
               </svg>
             </label>
+            <span className="font-bold text-lg lg:hidden text-blue-700">
+              Dashboard
+            </span>
           </div>
 
+          {/* Right side */}
           <div className="flex items-center gap-4">
-            <span className="font-semibold">{user.coins} Coins</span>
-            <div className="flex flex-col leading-tight">
-              <span className="font-medium">{user.name}</span>
+            <span className="font-semibold hidden sm:block text-blue-700">
+              {user.coins} Coins
+            </span>
+            <div className="flex flex-col leading-tight text-right hidden sm:flex">
+              <span className="font-medium text-gray-800">{user.name}</span>
               <span className="text-xs text-gray-500">{user.role}</span>
             </div>
             <Link to="/dashboard/profile">
               <img
                 src={user.image}
                 alt="user avatar"
-                className="w-8 h-8 rounded-full border-2 border-brand p-0.5"
+                className="w-8 h-8 rounded-full border-2 border-blue-400"
               />
             </Link>
-
             <button className="btn btn-ghost btn-circle">
               <div className="indicator">
-                <Bell className="w-5 h-5" />
-                <span className="badge badge-sm bg-brand-dark text-light indicator-item">
+                <Bell className="w-5 h-5 text-blue-600" />
+                <span className="badge badge-sm bg-blue-500 text-white indicator-item">
                   3
                 </span>
               </div>
@@ -135,33 +165,17 @@ const DashboardLayout = () => {
           </div>
         </div>
 
-        {/* Page Content */}
+        {/* Outlet */}
         <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>
 
         {/* Footer */}
-        <footer className="bg-slate-200 text-center py-3 shadow-inner mt-auto">
+        <footer className="bg-blue-100 text-center py-3 shadow-inner">
           <p className="text-sm text-gray-600">
             &copy; {new Date().getFullYear()} Workloy. All rights reserved.
           </p>
         </footer>
-      </div>
-
-      {/* Sidebar drawer */}
-      <div className="drawer-side">
-        <label htmlFor="dashboard-drawer" className="drawer-overlay lg:hidden"></label>
-        <ul className="menu bg-base-300 min-h-full w-72 p-4 space-y-2">
-          <Link to="/" className="mb-6 block">
-            <Logo />
-          </Link>
-
-          {menuItem("/dashboard", HiHome, "Home")}
-
-          {/* Render role-based menu */}
-          {!roleLoading &&
-            roleMenus[role]?.map(([to, Icon, label]) => menuItem(to, Icon, label))}
-        </ul>
       </div>
     </div>
   );
